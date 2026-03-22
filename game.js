@@ -739,9 +739,38 @@ function spawnConfetti() {
 // INIT is handled by the menu's DOMContentLoaded below
 
 // ═══════════════════════════════════════════════════════
-//  MENU — animated hex background + screen transitions
+//  LOGO CANVAS — draws animated 3D-style Arabic title
 // ═══════════════════════════════════════════════════════
 
+// ══════════════════════════════════════════════════
+//  CSS LOGO — updates the animated HTML logo elements
+// ══════════════════════════════════════════════════
+function onGameNameInput(val) {
+  const v = val.trim();
+  const w2 = document.getElementById('logo-w2');
+  const w3 = document.getElementById('logo-w3');
+  const ver = document.getElementById('menu-version');
+
+  if (!v) {
+    // Default: "لعبة" + "الخلية"
+    if (w2) w2.textContent = 'الخلية';
+    if (w3) { w3.textContent = ''; w3.classList.remove('visible'); }
+    if (ver) ver.textContent = 'v2.0 — لعبة الخلية';
+  } else {
+    // Custom: "لعبة" + "خلية" + name
+    if (w2) w2.textContent = 'خلية';
+    if (w3) { w3.textContent = v; w3.classList.add('visible'); }
+    if (ver) ver.textContent = `v2.0 — لعبة خلية ${v}`;
+  }
+
+  // Also update sidebar mini-logo when in game
+  const sl = document.getElementById('side-logo-w2');
+  if (sl) sl.textContent = v ? `خلية ${v}` : 'الخلية';
+}
+
+// ═══════════════════════════════════════════════════════
+//  MENU BACKGROUND CANVAS — rich purple hex grid
+// ═══════════════════════════════════════════════════════
 let menuAnimId = null;
 let howtoOpen  = false;
 
@@ -759,20 +788,25 @@ function initMenuCanvas() {
 
   function buildMenuHexes() {
     hexes = [];
-    const r  = 38;
-    const DX = Math.sqrt(3) * r;
-    const DY = 1.5 * r;
-    const cols = Math.ceil(W / DX) + 2;
-    const rows = Math.ceil(H / DY) + 2;
+    // Large flat-top hexes matching the reference image
+    const r  = Math.max(40, Math.min(W, H) * 0.08);
+    const DX = 1.5 * r;
+    const DY = Math.sqrt(3) * r;
+    const cols = Math.ceil(W / DX) + 3;
+    const rows = Math.ceil(H / DY) + 3;
     for (let row = -1; row < rows; row++) {
       for (let col = -1; col < cols; col++) {
         hexes.push({
-          x: col * DX + (row % 2 === 1 ? DX / 2 : 0),
-          y: row * DY,
+          x:     col * DX,
+          y:     row * DY + (col % 2 === 1 ? DY / 2 : 0),
           r,
-          phase:  Math.random() * Math.PI * 2,
-          speed:  0.004 + Math.random() * 0.006,
-          baseA:  0.04 + Math.random() * 0.08,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.3 + Math.random() * 0.5,
+          // Each hex optionally shows a random Arabic letter
+          letter: Math.random() > 0.45
+            ? ALL_LETTERS[Math.floor(Math.random() * ALL_LETTERS.length)]
+            : null,
+          scale: 0.85 + Math.random() * 0.3,
         });
       }
     }
@@ -781,45 +815,62 @@ function initMenuCanvas() {
   function drawMenuFrame() {
     mctx.clearRect(0, 0, W, H);
 
-    // gradient background
-    const grad = mctx.createLinearGradient(0, 0, W, H);
-    if (isDark) {
-      grad.addColorStop(0,   '#0f0a1e');
-      grad.addColorStop(0.5, '#1a0a3a');
-      grad.addColorStop(1,   '#0a0a1e');
-    } else {
-      grad.addColorStop(0,   '#d4c0f8');
-      grad.addColorStop(0.5, '#e8deff');
-      grad.addColorStop(1,   '#c8b4f0');
-    }
+    // Rich purple gradient base — matches reference
+    const grad = mctx.createRadialGradient(W*0.5, H*0.4, 0, W*0.5, H*0.4, Math.max(W,H)*0.75);
+    grad.addColorStop(0,   '#7c35c5');
+    grad.addColorStop(0.5, '#5b1fa0');
+    grad.addColorStop(1,   '#3a0d6e');
     mctx.fillStyle = grad;
     mctx.fillRect(0, 0, W, H);
 
     const now = performance.now() * 0.001;
 
     hexes.forEach(h => {
-      const alpha = h.baseA + Math.sin(now * h.speed * 60 + h.phase) * 0.05;
+      const pulse = 0.5 + 0.5 * Math.sin(now * h.speed + h.phase);
+      const alpha = 0.06 + pulse * 0.12;
+
+      // Flat-top corners
       const pts = Array.from({ length: 6 }, (_, i) => {
-        const a = (Math.PI / 3) * i + Math.PI / 6;
+        const a = (Math.PI / 3) * i;
         return [h.x + h.r * Math.cos(a), h.y + h.r * Math.sin(a)];
       });
 
-      // Fill
+      // Hex fill — subtle light purple like reference
       mctx.beginPath();
       mctx.moveTo(...pts[0]);
       for (let i = 1; i < 6; i++) mctx.lineTo(...pts[i]);
       mctx.closePath();
-      mctx.fillStyle = isDark
-        ? `rgba(120,60,255,${alpha})`
-        : `rgba(80,20,180,${alpha * 0.6})`;
+      mctx.fillStyle   = `rgba(180,140,255,${alpha * 0.6})`;
       mctx.fill();
 
-      // Stroke
-      mctx.strokeStyle = isDark
-        ? `rgba(160,100,255,${alpha * 1.4})`
-        : `rgba(100,40,200,${alpha})`;
-      mctx.lineWidth = 0.8;
+      // Hex border — more visible
+      mctx.strokeStyle = `rgba(200,160,255,${alpha * 1.8})`;
+      mctx.lineWidth   = 1.5;
       mctx.stroke();
+
+      // Inner hex (smaller, for depth)
+      const rInner = h.r * 0.78;
+      mctx.beginPath();
+      Array.from({ length: 6 }, (_, i) => {
+        const a = (Math.PI / 3) * i;
+        const px = h.x + rInner * Math.cos(a);
+        const py = h.y + rInner * Math.sin(a);
+        i === 0 ? mctx.moveTo(px, py) : mctx.lineTo(px, py);
+      });
+      mctx.closePath();
+      mctx.strokeStyle = `rgba(220,180,255,${alpha * 0.9})`;
+      mctx.lineWidth   = 0.6;
+      mctx.stroke();
+
+      // Arabic letter inside hex
+      if (h.letter) {
+        const fs = Math.round(h.r * 0.52 * h.scale);
+        mctx.font = `700 ${fs}px Cairo, sans-serif`;
+        mctx.textAlign = 'center';
+        mctx.textBaseline = 'middle';
+        mctx.fillStyle = `rgba(220,190,255,${alpha * 1.4})`;
+        mctx.fillText(h.letter, h.x, h.y);
+      }
     });
 
     menuAnimId = requestAnimationFrame(drawMenuFrame);
@@ -843,39 +894,30 @@ function toggleHowto() {
 
 // ── Start game from menu ───────────────────────────────
 function startGame() {
-  unlockAudio(); // unlock on the first real button press
-  // Read names from menu inputs
-  const gName = document.getElementById('menu-name-g').value.trim() || 'الفريق الأول';
-  const oName = document.getElementById('menu-name-o').value.trim() || 'الفريق الثاني';
-  const gameName = document.getElementById('game-name-input').value.trim() || 'لعبة الخلية';
+  unlockAudio();
+  const gName    = document.getElementById('menu-name-g').value.trim() || 'الفريق الأول';
+  const oName    = document.getElementById('menu-name-o').value.trim() || 'الفريق الثاني';
+  const rawInput = document.getElementById('game-name-input').value.trim();
+  const gameName = rawInput ? `لعبة خلية ${rawInput}` : 'لعبة الخلية';
 
-  // Apply to game
   document.getElementById('name-g').value = gName;
   document.getElementById('name-o').value = oName;
-  document.getElementById('game-title-bar').textContent = gameName;
   document.title = gameName;
 
-  // Show game screen, hide menu
+  // Update sidebar mini-logo
+  const sl = document.getElementById('side-logo-w2');
+  if (sl) sl.textContent = rawInput ? `خلية ${rawInput}` : 'الخلية';
+
   const menuEl = document.getElementById('main-menu');
   const gameEl = document.getElementById('game-screen');
-
   gameEl.classList.remove('hidden');
-  // Force reflow so transition fires
   gameEl.offsetHeight;
   gameEl.classList.add('visible');
   menuEl.classList.add('fade-out');
 
-  setTimeout(() => {
-    menuEl.style.display = 'none';
-    stopMenuCanvas();
-  }, 500);
+  setTimeout(() => { menuEl.style.display = 'none'; stopMenuCanvas(); }, 500);
 
-  // Boot game
-  syncNames();
-  build();
-  applyTheme();
-  updateTurnIndicator();
-  renderHistory();
+  syncNames(); build(); applyTheme(); updateTurnIndicator(); renderHistory();
   window.addEventListener('resize', resize);
   document.fonts.ready.then(() => resize());
   resize();
@@ -885,18 +927,11 @@ function startGame() {
 function goToMenu() {
   const menuEl = document.getElementById('main-menu');
   const gameEl = document.getElementById('game-screen');
-
   menuEl.style.display = '';
   menuEl.classList.remove('fade-out');
   gameEl.classList.remove('visible');
-
-  setTimeout(() => {
-    gameEl.classList.add('hidden');
-  }, 500);
-
-  // Restart menu canvas
+  setTimeout(() => { gameEl.classList.add('hidden'); }, 500);
   initMenuCanvas();
-  // Update menu theme button
   const mb = document.getElementById('menu-theme-btn');
   if (mb) mb.textContent = isDark ? '☀️' : '🌙';
 }

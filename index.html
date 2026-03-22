@@ -9,98 +9,96 @@
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════ -->
-<!--  MAIN MENU                                  -->
-<!-- ═══════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════ -->
+<!--  MAIN MENU                                         -->
+<!-- ══════════════════════════════════════════════════ -->
 <div id="main-menu" class="menu-screen">
 
-  <!-- Animated hex canvas background -->
+  <!-- Full-screen animated background canvas -->
   <canvas id="menu-canvas"></canvas>
 
-  <!-- Theme toggle top-right -->
-  <button class="menu-theme-btn" id="menu-theme-btn" onclick="toggleTheme()">☀️</button>
+  <!-- Theme toggle — top left -->
+  <button class="menu-corner-btn" id="menu-theme-btn" onclick="toggleTheme()">☀️</button>
 
+  <!-- ── ANIMATED LOGO ── -->
+  <div class="menu-logo-area" id="menu-logo-area">
+    <div class="logo-word logo-w1" id="logo-w1">لعبة</div>
+    <div class="logo-word logo-w2" id="logo-w2">الخلية</div>
+    <div class="logo-word logo-w3" id="logo-w3"></div>
+  </div>
+
+  <!-- ── GLASS CARD ── -->
   <div class="menu-card" id="menu-card">
 
-    <!-- Logo / Title -->
-    <div class="menu-logo">
-      <div class="menu-hex-icon">⬡</div>
-      <div class="menu-game-name" id="menu-game-name">لعبة الخلية</div>
-      <div class="menu-tagline">استراتيجية الوصل — من يكمل الطريق يفوز</div>
-    </div>
-
-    <div class="menu-divider"></div>
-
-    <!-- Custom game name -->
-    <div class="menu-section">
-      <label class="menu-label">🎮 اسم اللعبة</label>
-      <input class="menu-input" id="game-name-input"
+    <!-- Game name input -->
+    <div class="mf-wrap">
+      <label class="mf-label">اسم اللعبة</label>
+      <input class="mf-input" id="game-name-input"
              placeholder="لعبة الخلية" maxlength="24"
-             oninput="document.getElementById('menu-game-name').textContent = this.value || 'لعبة الخلية'"/>
+             oninput="onGameNameInput(this.value)"/>
     </div>
 
-    <!-- Team names -->
-    <div class="menu-teams-row">
-      <div class="menu-team-col">
-        <label class="menu-label"><span class="label-dot" style="background:#22c55e"></span> الفريق الأول</label>
-        <input class="menu-input team-input-g" id="menu-name-g"
+    <!-- Team names side by side -->
+    <div class="menu-teams">
+      <div class="menu-team">
+        <label class="mf-label team-lbl-g">
+          <span class="tl-dot" style="background:#22c55e"></span>الفريق الأخضر
+        </label>
+        <input class="mf-input mf-input-g" id="menu-name-g"
                placeholder="الفريق الأول" maxlength="16"/>
       </div>
       <div class="menu-vs">VS</div>
-      <div class="menu-team-col">
-        <label class="menu-label"><span class="label-dot" style="background:#f97316"></span> الفريق الثاني</label>
-        <input class="menu-input team-input-o" id="menu-name-o"
+      <div class="menu-team">
+        <label class="mf-label team-lbl-o">
+          <span class="tl-dot" style="background:#f97316"></span>الفريق البرتقالي
+        </label>
+        <input class="mf-input mf-input-o" id="menu-name-o"
                placeholder="الفريق الثاني" maxlength="16"/>
       </div>
     </div>
 
-    <div class="menu-divider"></div>
-
-    <!-- How to play -->
-    <div class="menu-howto" id="howto-wrap">
-      <button class="menu-howto-toggle" onclick="toggleHowto()">
-        <span>كيف تلعب؟</span>
-        <span id="howto-arrow">▼</span>
-      </button>
-      <div class="menu-howto-body" id="howto-body">
-        <div class="howto-item"><span class="howto-dot green-dot"></span><span>الفريق الأخضر يوصل من <strong>فوق لتحت</strong></span></div>
-        <div class="howto-item"><span class="howto-dot orange-dot"></span><span>الفريق البرتقالي يوصل من <strong>يسار ليمين</strong></span></div>
-        <div class="howto-item"><span class="howto-dot purple-dot"></span><span>اضغط الخلية مرة للاختيار — مرة ثانية للأخضر — ثالثة للبرتقالي — رابعة للمسح</span></div>
-        <div class="howto-item"><span class="howto-dot yellow-dot"></span><span>أول من يفوز بـ <strong>جولتين</strong> يحسم البطولة</span></div>
-      </div>
+    <!-- How to play collapsible -->
+    <button class="howto-btn" onclick="toggleHowto()">
+      <span>كيف تلعب؟</span>
+      <span id="howto-arrow">▼</span>
+    </button>
+    <div class="howto-body" id="howto-body">
+      <div class="howto-row"><span class="hd green-hd"></span><span>الأخضر يوصل من <b>فوق لتحت</b></span></div>
+      <div class="howto-row"><span class="hd orange-hd"></span><span>البرتقالي يوصل من <b>يسار ليمين</b></span></div>
+      <div class="howto-row"><span class="hd yellow-hd"></span><span>اضغط الخلية: مرة تختار — ثانية أخضر — ثالثة برتقالي — رابعة مسح</span></div>
+      <div class="howto-row"><span class="hd purple-hd"></span><span>أول من يفوز بـ <b>جولتين</b> يحسم البطولة</span></div>
     </div>
 
     <!-- Start button -->
-    <button class="menu-start-btn" onclick="startGame()">
-      <span class="start-icon">▶</span>
-      <span>ابدأ اللعبة</span>
-    </button>
+    <button class="menu-start-btn" onclick="startGame()">ابدأ اللعبة ◄</button>
 
-    <!-- Version -->
-    <div class="menu-version">v2.0 — لعبة الخلية</div>
+    <div class="menu-version" id="menu-version">v2.0 — لعبة الخلية</div>
   </div>
+
 </div>
 
-<!-- ═══════════════════════════════════════════ -->
-<!--  GAME SCREEN                                -->
-<!-- ═══════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════ -->
+<!--  GAME SCREEN                                       -->
+<!-- ══════════════════════════════════════════════════ -->
 <div id="game-screen" class="game-screen hidden">
 <div class="card">
 
-  <!-- Play area -->
   <div class="play" id="play">
     <canvas id="c"></canvas>
     <button class="collapse-btn" id="collapse-btn" onclick="toggleSide()">▶</button>
   </div>
 
-  <!-- Side panel -->
   <div class="side" id="side">
     <div class="side-toolbar">
-      <button class="icon-btn" onclick="goToMenu()" title="القائمة الرئيسية">🏠</button>
-      <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="تغيير المظهر">☀️</button>
+      <button class="icon-btn" onclick="goToMenu()" title="القائمة">⌂</button>
+      <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="المظهر">☀️</button>
     </div>
 
-    <div class="game-title-bar" id="game-title-bar">لعبة الخلية</div>
+    <!-- Mini logo in sidebar -->
+    <div class="side-logo" id="side-logo">
+      <span class="side-logo-w1">لعبة</span>
+      <span class="side-logo-w2" id="side-logo-w2">الخلية</span>
+    </div>
 
     <div class="round-title">الجولة<br><span class="hi" id="rname">الأولى</span></div>
 
@@ -115,14 +113,14 @@
       <span>دور: الفريق الأول</span>
     </div>
 
-    <input class="tin" id="name-g" value="الفريق الأول" placeholder="اسم الفريق الأول" maxlength="16" oninput="syncNames()"/>
+    <input class="tin" id="name-g" value="الفريق الأول" placeholder="الفريق الأول" maxlength="16" oninput="syncNames()"/>
     <button class="tbtn" id="btn-g" onclick="pickTeam('green')">
       <span class="chk" id="chk-g">✓</span>
       <span id="lbl-g">الفريق الأول</span>
       <span class="team-dot-g"></span>
     </button>
 
-    <input class="tin" id="name-o" value="الفريق الثاني" placeholder="اسم الفريق الثاني" maxlength="16" oninput="syncNames()"/>
+    <input class="tin" id="name-o" value="الفريق الثاني" placeholder="الفريق الثاني" maxlength="16" oninput="syncNames()"/>
     <button class="tbtn" id="btn-o" onclick="pickTeam('orange')">
       <span class="chk" id="chk-o">✓</span>
       <span id="lbl-o">الفريق الثاني</span>
@@ -144,7 +142,7 @@
     <button class="ctrl cd" onclick="newGame()">🎮 لعبة جديدة</button>
   </div>
 </div>
-</div><!-- /game-screen -->
+</div>
 
 <div class="cf-wrap" id="cf"></div>
 
