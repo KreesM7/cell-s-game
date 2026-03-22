@@ -389,21 +389,35 @@ function draw() {
     else fill = T.hexEmpty;
     ctx.fillStyle = fill; ctx.fill();
 
-    // ── Small cycle badge in top-right of hovered cell ──
+    // ── Small colored indicator dot (top-right corner of hovered cell) ──
     if (nextStep && !pendingTeam) {
-      const badgeEmoji =
-          nextStep === 'select'  ? '🟡'
-        : nextStep === 'green'   ? '🟢'
-        : nextStep === 'orange'  ? '🟠'
-        : '✖';
-      const bs = Math.round(R * 0.3);
-      ctx.font = `${bs}px serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      // Position: top-right area of the hex
-      const bx = x + R * 0.42;
-      const by = y - R * 0.52;
-      ctx.fillText(badgeEmoji, bx, by);
+      const dotColor =
+          nextStep === 'select'  ? '#fde047'
+        : nextStep === 'green'   ? '#22c55e'
+        : nextStep === 'orange'  ? '#f97316'
+        : '#ef4444'; // clear = red
+      // Subtle animated ring around the whole hex
+      ctx.beginPath(); ctx.moveTo(...outerC[0]);
+      for (let i = 1; i < 6; i++) ctx.lineTo(...outerC[i]);
+      ctx.closePath();
+      ctx.strokeStyle = dotColor;
+      ctx.lineWidth = R * 0.06;
+      ctx.globalAlpha = 0.55;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // Small filled circle in the upper-right corner
+      const bx = x + R * 0.5;
+      const by = y - R * 0.55;
+      const br = R * 0.13;
+      ctx.beginPath();
+      ctx.arc(bx, by, br + 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(bx, by, br, 0, Math.PI * 2);
+      ctx.fillStyle = dotColor;
+      ctx.fill();
     }
 
     // ── Letter with outline ──
@@ -466,19 +480,8 @@ cv.addEventListener('mousemove', e => {
   const {px,py} = sxy(e), cell = cellAt(px,py);
   const nh = cell ? cell.id : null;
   if (nh !== hovId) { hovId = nh; draw(); }
-  // Show what the next click will do
-  if (cell && !pendingTeam) {
-    const nextAction =
-        (!cell.owner && selId !== cell.id) ? '🟡 اختيار'
-      : (selId === cell.id && !cell.owner) ? '🟢 أخضر'
-      : cell.owner === 'green'             ? '🟠 برتقالي'
-      : cell.owner === 'orange'            ? '✖ إلغاء'
-      : 'pointer';
-    cv.title = nextAction;
-  } else {
-    cv.title = '';
-  }
   cv.style.cursor = cell ? 'pointer' : 'default';
+  cv.title = '';
 });
 cv.addEventListener('mouseleave', () => { hovId = null; draw(); });
 cv.addEventListener('click', e => {
@@ -532,9 +535,14 @@ function onCell(id) {
     // Step 3: assign ORANGE
     doAssign(id, 'orange');
   } else if (cell.owner === 'orange') {
-    // Step 4: clear back to unowned
+    // Step 4: clear back to unowned — log it
+    const letter = cell.letter;
     cell.owner = null;
     playUnselectSound();
+    // Log the clear to history
+    moveHistory.unshift({ team: 'clear', letter, num: '—', action: 'clear' });
+    if (moveHistory.length > 6) moveHistory.pop();
+    renderHistory();
     draw();
   }
 }
@@ -547,16 +555,19 @@ function doAssign(id, team) {
 
   playClick(team);
 
-  // Only log + advance turn on a fresh claim
   if (!wasOwned) {
+    // Fresh claim — advance turn
     moveNum++;
-    moveHistory.unshift({ team, letter: cell.letter, num: moveNum });
+    moveHistory.unshift({ team, letter: cell.letter, num: moveNum, action: 'claim' });
     if (moveHistory.length > 6) moveHistory.pop();
     currentTurn = team === 'green' ? 'orange' : 'green';
     updateTurnIndicator();
-    renderHistory();
+  } else if (wasOwned !== team) {
+    // Reassignment — same move number, just changed owner
+    moveHistory.unshift({ team, letter: cell.letter, num: '↺', action: 'change', from: wasOwned });
+    if (moveHistory.length > 6) moveHistory.pop();
   }
-
+  renderHistory();
   draw();
 
   if (won(team)) {
@@ -601,12 +612,32 @@ function renderHistory() {
     return;
   }
   el.innerHTML = moveHistory.map(m => {
+    if (m.action === 'clear') {
+      return `<div class="hist-item hist-clear">
+        <span class="hist-dot" style="background:#ef4444"></span>
+        <span class="hist-letter hist-letter-muted">${m.letter}</span>
+        <span class="hist-action-label" style="color:#ef4444">حُذف</span>
+      </div>`;
+    }
+    if (m.action === 'change') {
+      const toColor = m.team === 'green' ? '#22c55e' : '#f97316';
+      const frColor = m.from  === 'green' ? '#22c55e' : '#f97316';
+      return `<div class="hist-item">
+        <span class="hist-num" style="color:${toColor}">${m.num}</span>
+        <span class="hist-dot-mini" style="background:${frColor}"></span>
+        <span class="hist-arrow">→</span>
+        <span class="hist-dot-mini" style="background:${toColor}"></span>
+        <span class="hist-letter">${m.letter}</span>
+      </div>`;
+    }
+    // Normal claim
     const color = m.team === 'green' ? '#22c55e' : '#f97316';
-    const icon  = m.team === 'green' ? '🟢' : '🟠';
+    const teamShort = m.team === 'green' ? names.green : names.orange;
     return `<div class="hist-item">
       <span class="hist-num" style="color:${color}">#${m.num}</span>
-      <span class="hist-icon">${icon}</span>
+      <span class="hist-dot" style="background:${color}"></span>
       <span class="hist-letter">${m.letter}</span>
+      <span class="hist-team-name" style="color:${color}">${teamShort}</span>
     </div>`;
   }).join('');
 }

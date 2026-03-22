@@ -42,13 +42,13 @@
     <!-- Team names -->
     <div class="menu-teams-row">
       <div class="menu-team-col">
-        <label class="menu-label">🟢 الفريق الأول</label>
+        <label class="menu-label"><span class="label-dot" style="background:#22c55e"></span> الفريق الأول</label>
         <input class="menu-input team-input-g" id="menu-name-g"
                placeholder="الفريق الأول" maxlength="16"/>
       </div>
       <div class="menu-vs">VS</div>
       <div class="menu-team-col">
-        <label class="menu-label">🟠 الفريق الثاني</label>
+        <label class="menu-label"><span class="label-dot" style="background:#f97316"></span> الفريق الثاني</label>
         <input class="menu-input team-input-o" id="menu-name-o"
                placeholder="الفريق الثاني" maxlength="16"/>
       </div>
@@ -59,14 +59,14 @@
     <!-- How to play -->
     <div class="menu-howto" id="howto-wrap">
       <button class="menu-howto-toggle" onclick="toggleHowto()">
-        <span>📖 كيف تلعب؟</span>
+        <span>كيف تلعب؟</span>
         <span id="howto-arrow">▼</span>
       </button>
       <div class="menu-howto-body" id="howto-body">
-        <div class="howto-item"><span class="howto-dot green-dot"></span><span>الفريق الأخضر 🟢 يوصل من <strong>فوق لتحت</strong></span></div>
-        <div class="howto-item"><span class="howto-dot orange-dot"></span><span>الفريق البرتقالي 🟠 يوصل من <strong>يسار ليمين</strong></span></div>
-        <div class="howto-item"><span class="howto-dot purple-dot"></span><span>اختر فريقك ثم اضغط على خلية لتدّعيها</span></div>
-        <div class="howto-item"><span class="howto-dot yellow-dot"></span><span>أول من يفوز بـ <strong>جولتين</strong> يحسم البطولة 🏆</span></div>
+        <div class="howto-item"><span class="howto-dot green-dot"></span><span>الفريق الأخضر يوصل من <strong>فوق لتحت</strong></span></div>
+        <div class="howto-item"><span class="howto-dot orange-dot"></span><span>الفريق البرتقالي يوصل من <strong>يسار ليمين</strong></span></div>
+        <div class="howto-item"><span class="howto-dot purple-dot"></span><span>اضغط الخلية مرة للاختيار — مرة ثانية للأخضر — ثالثة للبرتقالي — رابعة للمسح</span></div>
+        <div class="howto-item"><span class="howto-dot yellow-dot"></span><span>أول من يفوز بـ <strong>جولتين</strong> يحسم البطولة</span></div>
       </div>
     </div>
 
@@ -119,14 +119,14 @@
     <button class="tbtn" id="btn-g" onclick="pickTeam('green')">
       <span class="chk" id="chk-g">✓</span>
       <span id="lbl-g">الفريق الأول</span>
-      <span class="team-emoji">🟢</span>
+      <span class="team-dot-g"></span>
     </button>
 
     <input class="tin" id="name-o" value="الفريق الثاني" placeholder="اسم الفريق الثاني" maxlength="16" oninput="syncNames()"/>
     <button class="tbtn" id="btn-o" onclick="pickTeam('orange')">
       <span class="chk" id="chk-o">✓</span>
       <span id="lbl-o">الفريق الثاني</span>
-      <span class="team-emoji">🟠</span>
+      <span class="team-dot-o"></span>
     </button>
 
     <div class="divider"></div>
