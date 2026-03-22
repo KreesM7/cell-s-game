@@ -1,0 +1,115 @@
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  width:100vw; height:100vh; overflow:hidden;
+  font-family:'Cairo',sans-serif; background:#111;
+  display:flex; align-items:center; justify-content:center;
+}
+.card { display:flex; width:100vw; height:100vh; }
+
+/* ── Play area ── */
+.play { position:relative; flex:1; overflow:hidden; }
+
+/* Sharp 4-zone background matching screenshot */
+.bg-top    { position:absolute; inset:0; background:#3dba4e; clip-path:polygon(0 0,100% 0,60% 50%,40% 50%); }
+.bg-bottom { position:absolute; inset:0; background:#3dba4e; clip-path:polygon(40% 50%,60% 50%,100% 100%,0 100%); }
+.bg-left   { position:absolute; inset:0; background:#f57c22; clip-path:polygon(0 0,40% 50%,0 100%); }
+.bg-right  { position:absolute; inset:0; background:#f57c22; clip-path:polygon(100% 0,60% 50%,100% 100%); }
+
+#c { position:absolute; inset:0; width:100%; height:100%; display:block; }
+
+/* ── Side panel ── */
+.side {
+  width:clamp(150px,23vw,225px); flex-shrink:0;
+  background:#5427a0;
+  display:flex; flex-direction:column; align-items:center;
+  padding:clamp(10px,1.8vh,18px) clamp(10px,1.4vw,16px);
+  gap:clamp(7px,1.2vh,12px); position:relative;
+}
+.menu-btn { position:absolute; top:12px; right:13px; display:flex; flex-direction:column; gap:4px; cursor:pointer; opacity:.55; }
+.menu-btn span { display:block; width:18px; height:2px; background:#fff; border-radius:2px; }
+
+.round-title { margin-top:clamp(20px,3.5vh,36px); font-size:clamp(1.5rem,3.5vw,2.4rem); font-weight:900; color:#fff; text-align:center; line-height:1.05; }
+.round-title .hi { display:block; color:#f9e000; font-size:clamp(1.6rem,4vw,2.6rem); }
+
+.score-row { width:100%; display:flex; align-items:center; background:rgba(0,0,0,.2); border-radius:13px; padding:6px 10px; }
+.score-team { flex:1; text-align:center; }
+.score-team .sn { font-size:.67rem; font-weight:700; color:rgba(255,255,255,.6); }
+.score-team .sv { font-size:1.35rem; font-weight:900; color:#fff; }
+.score-vs { font-size:.72rem; color:rgba(255,255,255,.3); padding:0 3px; }
+
+.tin {
+  width:100%; background:rgba(255,255,255,.1); border:1.5px solid rgba(255,255,255,.18);
+  border-radius:18px; padding:6px 11px;
+  font-family:'Cairo',sans-serif; font-size:.78rem; font-weight:700; color:#fff;
+  text-align:right; direction:rtl; outline:none; transition:border .18s;
+}
+.tin::placeholder { color:rgba(255,255,255,.32); }
+.tin:focus { border-color:rgba(255,255,255,.6); }
+
+.tbtn {
+  width:100%; display:flex; align-items:center; gap:7px;
+  background:rgba(0,0,0,.18); border:2px solid rgba(255,255,255,.16);
+  border-radius:24px; padding:7px 11px; cursor:pointer;
+  font-family:'Cairo',sans-serif; font-size:.8rem; font-weight:700; color:#fff;
+  transition:all .16s; direction:rtl;
+}
+.tbtn:hover { background:rgba(255,255,255,.18); }
+.tbtn.active { background:rgba(255,255,255,.28); border-color:#fff; box-shadow:0 0 0 2.5px rgba(255,255,255,.35); transform:scale(1.03); }
+.team-emoji { margin-right:auto; }
+
+.chk {
+  width:21px; height:21px; border-radius:50%;
+  background:rgba(0,0,0,.2); border:2.5px solid rgba(255,255,255,.3);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; font-size:11px; color:#fff; transition:all .2s;
+}
+.chk.g { background:#22c55e; border-color:#22c55e; }
+.chk.o { background:#f97316; border-color:#f97316; }
+
+.divider { width:75%; height:1px; background:rgba(255,255,255,.12); }
+.ctrl {
+  width:100%; font-family:'Cairo',sans-serif; font-size:.78rem; font-weight:700;
+  padding:8px 10px; border:none; border-radius:18px; cursor:pointer; transition:all .18s;
+}
+.ctrl:hover { transform:scale(1.04); opacity:.9; }
+.cw { background:rgba(255,255,255,.9); color:#333; }
+.cd { background:rgba(0,0,0,.28); color:#fff; }
+
+/* ── Overlays ── */
+.ov { display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:600; align-items:center; justify-content:center; }
+.ov.show { display:flex; }
+
+.ov-card {
+  background:#fff; border-radius:24px;
+  padding:clamp(26px,4.5vw,42px) clamp(30px,5.5vw,52px);
+  text-align:center; animation:pop .38s cubic-bezier(.175,.885,.32,1.275);
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+  font-family:'Cairo',sans-serif; max-width:380px; width:88%;
+}
+@keyframes pop { from{transform:scale(.3);opacity:0} to{transform:scale(1);opacity:1} }
+.ov-e { font-size:2.7rem; margin-bottom:8px; }
+.ov-t { font-size:1.55rem; font-weight:900; margin-bottom:6px; }
+.ov-s { font-size:.87rem; color:#666; margin-bottom:20px; line-height:1.5; }
+.ov-b { font-family:'Cairo',sans-serif; font-size:.9rem; font-weight:700; padding:10px 24px; border:none; border-radius:18px; background:#5427a0; color:#fff; cursor:pointer; transition:all .18s; }
+.ov-b:hover { background:#43208a; transform:scale(1.04); }
+
+.gw-card {
+  background:linear-gradient(145deg,#5427a0,#3a1070);
+  border-radius:28px; padding:clamp(34px,5.5vw,50px) clamp(38px,6vw,58px);
+  text-align:center; animation:pop .42s cubic-bezier(.175,.885,.32,1.275);
+  box-shadow:0 28px 80px rgba(0,0,0,.65);
+  font-family:'Cairo',sans-serif; max-width:450px; width:90%;
+  position:relative; overflow:hidden;
+}
+.gw-card::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% -10%,rgba(255,255,255,.14) 0%,transparent 65%); pointer-events:none; }
+.gw-e   { font-size:3.8rem; margin-bottom:10px; }
+.gw-mbr { font-size:1.25rem; font-weight:700; color:rgba(255,255,255,.72); margin-bottom:4px; letter-spacing:2px; }
+.gw-nm  { font-size:2.3rem; font-weight:900; color:#f9e000; margin-bottom:8px; text-shadow:0 2px 14px rgba(0,0,0,.4); }
+.gw-sub { font-size:.92rem; color:rgba(255,255,255,.58); margin-bottom:26px; }
+.gw-b { font-family:'Cairo',sans-serif; font-size:.94rem; font-weight:700; padding:12px 32px; border:none; border-radius:22px; background:#f9e000; color:#3a1070; cursor:pointer; transition:all .18s; box-shadow:0 4px 16px rgba(0,0,0,.3); }
+.gw-b:hover { background:#ffe500; transform:scale(1.05); }
+
+/* Confetti */
+.cf-wrap { position:fixed; inset:0; pointer-events:none; z-index:599; overflow:hidden; }
+.cf { position:absolute; top:-20px; border-radius:2px; animation:fall linear forwards; }
+@keyframes fall { to { transform:translateY(110vh) rotate(720deg); opacity:0; } }

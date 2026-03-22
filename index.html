@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لعبة الخلية</title>
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="card">
+  <div class="play" id="play">
+    <!-- 4-zone background -->
+    <div class="bg-top"></div>
+    <div class="bg-bottom"></div>
+    <div class="bg-left"></div>
+    <div class="bg-right"></div>
+    <canvas id="c"></canvas>
+  </div>
+
+  <div class="side">
+    <div class="menu-btn"><span></span><span></span><span></span></div>
+    <div class="round-title">الجولة<br><span class="hi" id="rname">الأولى</span></div>
+
+    <div class="score-row">
+      <div class="score-team"><div class="sn" id="sn-g">الفريق الأول</div><div class="sv" id="sv-g">0</div></div>
+      <div class="score-vs">جولات</div>
+      <div class="score-team"><div class="sn" id="sn-o">الفريق الثاني</div><div class="sv" id="sv-o">0</div></div>
+    </div>
+
+    <input class="tin" id="name-g" value="الفريق الأول" placeholder="اسم الفريق الأول" maxlength="16" oninput="syncNames()"/>
+    <button class="tbtn" id="btn-g" onclick="pickTeam('green')">
+      <span class="chk" id="chk-g">✓</span>
+      <span id="lbl-g">الفريق الأول</span>
+      <span class="team-emoji">🟢</span>
+    </button>
+
+    <input class="tin" id="name-o" value="الفريق الثاني" placeholder="اسم الفريق الثاني" maxlength="16" oninput="syncNames()"/>
+    <button class="tbtn" id="btn-o" onclick="pickTeam('orange')">
+      <span class="chk" id="chk-o">✓</span>
+      <span id="lbl-o">الفريق الثاني</span>
+      <span class="team-emoji">🟠</span>
+    </button>
+
+    <div class="divider"></div>
+    <button class="ctrl cw" onclick="newRound()">🔄 جولة جديدة</button>
+    <button class="ctrl cd" onclick="newGame()">🎮 لعبة جديدة</button>
+  </div>
+</div>
+
+<div class="cf-wrap" id="cf"></div>
+
+<!-- Round win overlay -->
+<div class="ov" id="ov-r">
+  <div class="ov-card">
+    <div class="ov-e" id="ov-r-e">🏅</div>
+    <div class="ov-t" id="ov-r-t">فاز الفريق!</div>
+    <div class="ov-s" id="ov-r-s">استمروا في اللعب</div>
+    <button class="ov-b" onclick="nextRound()">▶ الجولة التالية</button>
+  </div>
+</div>
+
+<!-- Game win overlay -->
+<div class="ov" id="ov-g">
+  <div class="gw-card">
+    <div class="gw-e">🏆</div>
+    <div class="gw-mbr">مبروك الفوز</div>
+    <div class="gw-nm" id="gw-nm">الفريق الأول</div>
+    <div class="gw-sub" id="gw-sub">فاز بجولتين وحسم البطولة!</div>
+    <button class="gw-b" onclick="newGame()">🎮 لعبة جديدة</button>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>

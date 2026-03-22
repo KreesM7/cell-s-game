@@ -1,0 +1,9 @@
+{
+  "title": "لعبة الخلية",
+  "description": "لعبة استراتيجية للفريقين — أول من يوصل طريقه عبر الشبكة السداسية يفوز!",
+  "tags": ["arabic", "strategy", "two-player", "hexagon", "board-game"],
+  "genre": "strategy",
+  "input-methods": ["mouse", "touchscreen"],
+  "languages": ["ar"],
+  "launch-path": "index.html"
+}
