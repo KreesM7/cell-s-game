@@ -9,20 +9,38 @@
 </head>
 <body>
 <div class="card">
+
+  <!-- Play area -->
   <div class="play" id="play">
     <canvas id="c"></canvas>
+    <!-- Collapse toggle sits on the boundary -->
+    <button class="collapse-btn" id="collapse-btn" onclick="toggleSide()">▶</button>
   </div>
 
-  <div class="side">
-    <div class="menu-btn"><span></span><span></span><span></span></div>
+  <!-- Side panel -->
+  <div class="side" id="side">
+
+    <!-- Top toolbar -->
+    <div class="side-toolbar">
+      <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="تغيير المظهر">☀️</button>
+    </div>
+
     <div class="round-title">الجولة<br><span class="hi" id="rname">الأولى</span></div>
 
+    <!-- Score -->
     <div class="score-row">
       <div class="score-team"><div class="sn" id="sn-g">الفريق الأول</div><div class="sv" id="sv-g">0</div></div>
       <div class="score-vs">جولات</div>
       <div class="score-team"><div class="sn" id="sn-o">الفريق الثاني</div><div class="sv" id="sv-o">0</div></div>
     </div>
 
+    <!-- Turn indicator -->
+    <div class="turn-indicator" id="turn-indicator">
+      <span class="turn-dot" style="background:#22c55e"></span>
+      <span>دور: الفريق الأول</span>
+    </div>
+
+    <!-- Team 1 -->
     <input class="tin" id="name-g" value="الفريق الأول" placeholder="اسم الفريق الأول" maxlength="16" oninput="syncNames()"/>
     <button class="tbtn" id="btn-g" onclick="pickTeam('green')">
       <span class="chk" id="chk-g">✓</span>
@@ -30,6 +48,7 @@
       <span class="team-emoji">🟢</span>
     </button>
 
+    <!-- Team 2 -->
     <input class="tin" id="name-o" value="الفريق الثاني" placeholder="اسم الفريق الثاني" maxlength="16" oninput="syncNames()"/>
     <button class="tbtn" id="btn-o" onclick="pickTeam('orange')">
       <span class="chk" id="chk-o">✓</span>
@@ -38,6 +57,17 @@
     </button>
 
     <div class="divider"></div>
+
+    <!-- Move history -->
+    <div class="hist-wrap">
+      <div class="hist-title">آخر الحركات</div>
+      <div class="hist-list" id="history-list">
+        <div class="hist-empty">لا توجد حركات بعد</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
     <button class="ctrl cw" onclick="newRound()">🔄 جولة جديدة</button>
     <button class="ctrl cd" onclick="newGame()">🎮 لعبة جديدة</button>
   </div>
