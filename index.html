@@ -3,361 +3,175 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>حروف</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --g:#22c55e;--gd:#15803d;--gs:rgba(34,197,94,.18);
-  --o:#f97316;--od:#c2410c;--os:rgba(249,115,22,.18);
-  --y:#facc15;--yd:#a16207;--ys:rgba(250,204,21,.18);
-  --bg:#0c0c14;--s1:#111120;--s2:#18182a;--s3:#202035;
-  --bd:rgba(255,255,255,.07);--bd2:rgba(255,255,255,.13);
-  --t:#eeeef8;--t2:#6868a0;--t3:#303055;
-}
-html,body{height:100%;overflow:hidden;font-family:'Cairo',sans-serif;background:var(--bg);color:var(--t);direction:rtl;-webkit-font-smoothing:antialiased;}
-
-/* ═══ SETUP ═══ */
-#setup{
-  height:100vh;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:2.2rem;padding:2rem;
-  background:
-    radial-gradient(ellipse 600px 400px at 10% 15%,rgba(34,197,94,.07) 0%,transparent 70%),
-    radial-gradient(ellipse 600px 400px at 90% 85%,rgba(249,115,22,.07) 0%,transparent 70%),
-    var(--bg);
-}
-.logo{display:flex;align-items:center;gap:13px;font-size:42px;font-weight:900;color:var(--t);letter-spacing:-.5px;}
-.ld{width:13px;height:13px;border-radius:50%;}
-.ld.g{background:var(--g);box-shadow:0 0 16px var(--g),0 0 40px rgba(34,197,94,.3);}
-.ld.o{background:var(--o);box-shadow:0 0 16px var(--o),0 0 40px rgba(249,115,22,.3);}
-.sub{font-size:13px;color:var(--t2);font-weight:400;text-align:center;max-width:320px;line-height:1.7;}
-
-.sizes{display:flex;gap:14px;}
-.sz{
-  width:116px;padding:1.3rem .5rem 1rem;
-  background:var(--s1);border:1px solid var(--bd);border-radius:22px;
-  cursor:pointer;text-align:center;transition:all .22s cubic-bezier(.25,.46,.45,.94);
-  display:flex;flex-direction:column;align-items:center;gap:7px;position:relative;overflow:hidden;
-}
-.sz::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.025) 0%,transparent 60%);pointer-events:none;}
-.sz:hover{border-color:var(--bd2);background:var(--s2);transform:translateY(-5px);box-shadow:0 14px 36px rgba(0,0,0,.45);}
-.sz.best{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.04);}
-.sz.best:hover{border-color:rgba(34,197,94,.55);box-shadow:0 14px 36px rgba(34,197,94,.12);}
-.btag{position:absolute;top:0;left:50%;transform:translateX(-50%);background:var(--gd);color:#fff;font-size:9px;font-weight:700;padding:3px 11px;border-radius:0 0 9px 9px;letter-spacing:.04em;}
-.sz-num{font-size:20px;font-weight:900;color:var(--t);}
-.sz-lbl{font-size:11px;color:var(--t2);}
-
-/* ═══ GAME ═══ */
-#game{height:100vh;display:none;flex-direction:column;}
-
-.hdr{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:11px 18px;flex-shrink:0;
-  background:rgba(12,12,20,.93);backdrop-filter:blur(18px);
-  border-bottom:1px solid var(--bd);
-}
-.hdr-logo{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:700;}
-.hd{width:9px;height:9px;border-radius:50%;}
-.hd.g{background:var(--g);box-shadow:0 0 10px var(--g);}
-.hd.o{background:var(--o);box-shadow:0 0 10px var(--o);}
-.back{width:36px;height:36px;border-radius:11px;border:1px solid var(--bd);background:transparent;color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
-.back:hover{color:var(--t);border-color:var(--bd2);background:var(--s2);}
-
-/* scores */
-.scores{display:flex;align-items:stretch;flex-shrink:0;border-bottom:1px solid var(--bd);background:var(--s1);}
-.sc{flex:1;padding:9px 16px;text-align:center;}
-.sc.sg{border-left:2px solid var(--g);}
-.sc.so{border-right:2px solid var(--o);}
-.sc-name{font-size:10px;font-weight:700;color:var(--t2);margin-bottom:2px;letter-spacing:.05em;}
-.sc-num{font-size:24px;font-weight:900;line-height:1;}
-.sg .sc-num{color:var(--g);}
-.so .sc-num{color:var(--o);}
-.sc-dir{font-size:9px;color:var(--t3);margin-top:1px;}
-.sc-sep{display:flex;align-items:center;padding:0 10px;border-left:1px solid var(--bd);border-right:1px solid var(--bd);}
-
-/* color guide */
-.guide{
-  display:flex;align-items:center;justify-content:center;gap:18px;
-  padding:6px 16px;flex-shrink:0;border-bottom:1px solid var(--bd);
-  background:var(--s2);
-}
-.gi{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t2);}
-.gd{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-.gd.y{background:var(--y);box-shadow:0 0 6px var(--y);}
-.gd.g{background:var(--g);box-shadow:0 0 6px var(--g);}
-.gd.o{background:var(--o);box-shadow:0 0 6px var(--o);}
-
-/* board */
-#bwrap{
-  flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:12px;
-  background:
-    linear-gradient(to bottom,var(--od) 0%,var(--od) 8%,transparent 24%,transparent 76%,var(--od) 92%,var(--od) 100%),
-    linear-gradient(to right, var(--gd) 0%,var(--gd) 7%,transparent 22%,transparent 78%,var(--gd) 93%,var(--gd) 100%);
-}
-#bsvg{display:block;filter:drop-shadow(0 6px 28px rgba(0,0,0,.65));}
-
-/* ═══ WIN ═══ */
-#winlay{display:none;position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.82);backdrop-filter:blur(12px);align-items:center;justify-content:center;}
-#winlay.on{display:flex;}
-.winbox{background:var(--s1);border:1px solid var(--bd2);border-radius:28px;padding:2.5rem 2rem;text-align:center;max-width:340px;width:90%;animation:pop .32s cubic-bezier(.175,.885,.32,1.275);}
-@keyframes pop{from{opacity:0;transform:scale(.84)}to{opacity:1;transform:scale(1)}}
-.wtr{font-size:54px;margin-bottom:.8rem;}
-.wti{font-size:23px;font-weight:900;margin-bottom:.35rem;}
-.wsu{font-size:13px;color:var(--t2);margin-bottom:1.8rem;}
-.wbs{display:flex;gap:10px;justify-content:center;}
-.wb1{padding:11px 24px;background:var(--gd);color:#fff;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;border-radius:13px;border:none;cursor:pointer;transition:all .2s;}
-.wb1:hover{background:var(--g);color:#000;transform:translateY(-2px);}
-.wb2{padding:11px 20px;background:transparent;color:var(--t2);font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;border-radius:13px;border:1px solid var(--bd);cursor:pointer;transition:all .2s;}
-.wb2:hover{color:var(--t);border-color:var(--bd2);}
-</style>
+<title>لعبة الخلية</title>
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<div id="setup">
-  <div class="logo"><span class="ld g"></span>حروف<span class="ld o"></span></div>
-  <p class="sub">اضغط على الخلية لتغيير لونها — اربط خطاً متصلاً من طرف لطرف لتفوز</p>
-  <div class="sizes">
-    <div class="sz" onclick="init(5)">
-      <canvas id="p5" width="62" height="58"></canvas>
-      <div class="sz-num">5×5</div><div class="sz-lbl">سريعة</div>
-    </div>
-    <div class="sz best" onclick="init(7)">
-      <div class="btag">الأفضل</div>
-      <canvas id="p7" width="72" height="68"></canvas>
-      <div class="sz-num">7×7</div><div class="sz-lbl">متوسطة</div>
-    </div>
-    <div class="sz" onclick="init(9)">
-      <canvas id="p9" width="78" height="74"></canvas>
-      <div class="sz-num">9×9</div><div class="sz-lbl">كبيرة</div>
-    </div>
-  </div>
-</div>
+<!-- ═══════════════════════════════════════════ -->
+<!--  MAIN MENU                                  -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="main-menu" class="menu-screen">
 
-<div id="game">
-  <div class="hdr">
-    <button class="back" onclick="goHome()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+  <!-- Animated hex canvas background -->
+  <canvas id="menu-canvas"></canvas>
+
+  <!-- Theme toggle top-right -->
+  <button class="menu-theme-btn" id="menu-theme-btn" onclick="toggleTheme()">☀️</button>
+
+  <div class="menu-card" id="menu-card">
+
+    <!-- Logo / Title -->
+    <div class="menu-logo">
+      <div class="menu-hex-icon">⬡</div>
+      <div class="menu-game-name" id="menu-game-name">لعبة الخلية</div>
+      <div class="menu-tagline">استراتيجية الوصل — من يكمل الطريق يفوز</div>
+    </div>
+
+    <div class="menu-divider"></div>
+
+    <!-- Custom game name -->
+    <div class="menu-section">
+      <label class="menu-label">🎮 اسم اللعبة</label>
+      <input class="menu-input" id="game-name-input"
+             placeholder="لعبة الخلية" maxlength="24"
+             oninput="document.getElementById('menu-game-name').textContent = this.value || 'لعبة الخلية'"/>
+    </div>
+
+    <!-- Team names -->
+    <div class="menu-teams-row">
+      <div class="menu-team-col">
+        <label class="menu-label">🟢 الفريق الأول</label>
+        <input class="menu-input team-input-g" id="menu-name-g"
+               placeholder="الفريق الأول" maxlength="16"/>
+      </div>
+      <div class="menu-vs">VS</div>
+      <div class="menu-team-col">
+        <label class="menu-label">🟠 الفريق الثاني</label>
+        <input class="menu-input team-input-o" id="menu-name-o"
+               placeholder="الفريق الثاني" maxlength="16"/>
+      </div>
+    </div>
+
+    <div class="menu-divider"></div>
+
+    <!-- How to play -->
+    <div class="menu-howto" id="howto-wrap">
+      <button class="menu-howto-toggle" onclick="toggleHowto()">
+        <span>📖 كيف تلعب؟</span>
+        <span id="howto-arrow">▼</span>
+      </button>
+      <div class="menu-howto-body" id="howto-body">
+        <div class="howto-item"><span class="howto-dot green-dot"></span><span>الفريق الأخضر 🟢 يوصل من <strong>فوق لتحت</strong></span></div>
+        <div class="howto-item"><span class="howto-dot orange-dot"></span><span>الفريق البرتقالي 🟠 يوصل من <strong>يسار ليمين</strong></span></div>
+        <div class="howto-item"><span class="howto-dot purple-dot"></span><span>اختر فريقك ثم اضغط على خلية لتدّعيها</span></div>
+        <div class="howto-item"><span class="howto-dot yellow-dot"></span><span>أول من يفوز بـ <strong>جولتين</strong> يحسم البطولة 🏆</span></div>
+      </div>
+    </div>
+
+    <!-- Start button -->
+    <button class="menu-start-btn" onclick="startGame()">
+      <span class="start-icon">▶</span>
+      <span>ابدأ اللعبة</span>
     </button>
-    <div class="hdr-logo"><span class="hd g"></span>حروف<span class="hd o"></span></div>
-    <div style="width:36px"></div>
-  </div>
 
-  <div class="scores">
-    <div class="sc sg">
-      <div class="sc-name">الأخضر</div>
-      <div class="sc-num" id="ng">0</div>
-      <div class="sc-dir">أعلى ↕ أسفل</div>
-    </div>
-    <div class="sc-sep"></div>
-    <div class="sc so">
-      <div class="sc-name">البرتقالي</div>
-      <div class="sc-num" id="no">0</div>
-      <div class="sc-dir">يمين ↔ يسار</div>
-    </div>
-  </div>
-
-  <div class="guide">
-    <div class="gi"><div class="gd y"></div>محايد</div>
-    <div class="gi"><div class="gd g"></div>الأخضر</div>
-    <div class="gi"><div class="gd o"></div>البرتقالي</div>
-  </div>
-
-  <div id="bwrap"><svg id="bsvg"></svg></div>
-</div>
-
-<div id="winlay">
-  <div class="winbox">
-    <div class="wtr">🏆</div>
-    <div class="wti" id="wt"></div>
-    <div class="wsu" id="ws"></div>
-    <div class="wbs">
-      <button class="wb1" onclick="goHome()">لعبة جديدة</button>
-      <button class="wb2" onclick="goHome()">الرئيسية</button>
-    </div>
+    <!-- Version -->
+    <div class="menu-version">v2.0 — لعبة الخلية</div>
   </div>
 </div>
 
-<script>
-const S3=Math.sqrt(3);
-// 0=فارغ  1=أصفر  2=أخضر  3=برتقالي
-const FILLS  =['#e8e8f5','#fde047','#16a34a','#c2410c'];
-const STROKES=['#20203a','#ca8a04','#4ade80','#fb923c'];
-const HOVERS =['#d4d4ec','#fef08a','#22c55e','#ea580c'];
-const GLOWID =[null,'fy','fg','fo'];
-const TXTCOL =['#1a1a35','#78350f','#fff','#fff'];
-const LETTERS='ابتثجحخدذرزسشصضطظعغفقكلمنهوي'.split('');
+<!-- ═══════════════════════════════════════════ -->
+<!--  GAME SCREEN                                -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="game-screen" class="game-screen hidden">
+<div class="card">
 
-let N=7, board=[], letters=[];
+  <!-- Play area -->
+  <div class="play" id="play">
+    <canvas id="c"></canvas>
+    <button class="collapse-btn" id="collapse-btn" onclick="toggleSide()">▶</button>
+  </div>
 
-/* previews */
-window.addEventListener('load',()=>[5,7,9].forEach(n=>{
-  const cv=document.getElementById('p'+n),ctx=cv.getContext('2d');
-  const r=Math.min(cv.width/(S3*(n+.5)),cv.height/(1.5*(n-1)+2))*.88, hW=S3*r;
-  for(let row=0;row<n;row++){
-    const ox=(row%2)?hW/2:0;
-    for(let col=0;col<n;col++){
-      hPath(ctx,hW/2+col*hW+ox,r+row*1.5*r,r*.86);
-      ctx.fillStyle='#18182a';ctx.strokeStyle='#24243e';ctx.lineWidth=.9;ctx.fill();ctx.stroke();
-    }
-  }
-}));
+  <!-- Side panel -->
+  <div class="side" id="side">
+    <div class="side-toolbar">
+      <button class="icon-btn" onclick="goToMenu()" title="القائمة الرئيسية">🏠</button>
+      <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="تغيير المظهر">☀️</button>
+    </div>
 
-/* init */
-function init(size){
-  N=size;
-  board=Array.from({length:N},()=>Array(N).fill(0));
-  letters=Array.from({length:N},()=>Array.from({length:N},()=>LETTERS[Math.floor(Math.random()*LETTERS.length)]));
-  document.getElementById('setup').style.display='none';
-  document.getElementById('game').style.display='flex';
-  document.getElementById('winlay').classList.remove('on');
-  sync();draw();
-}
-function goHome(){
-  document.getElementById('setup').style.display='flex';
-  document.getElementById('game').style.display='none';
-  document.getElementById('winlay').classList.remove('on');
-}
+    <div class="game-title-bar" id="game-title-bar">لعبة الخلية</div>
 
-/* draw */
-function draw(){
-  const wrap=document.getElementById('bwrap'),svg=document.getElementById('bsvg');
-  const r=Math.min((wrap.clientWidth-20)/(S3*(N+.5)),(wrap.clientHeight-20)/(1.5*(N-1)+2),66);
-  const hW=S3*r,pad=r*.2,W=hW*(N+.5)+pad*2,H=r*(1.5*(N-1)+2)+pad*2;
-  const ns='http://www.w3.org/2000/svg';
+    <div class="round-title">الجولة<br><span class="hi" id="rname">الأولى</span></div>
 
-  svg.setAttribute('width',W);svg.setAttribute('height',H);
-  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
-  svg.innerHTML='';
+    <div class="score-row">
+      <div class="score-team"><div class="sn" id="sn-g">الفريق الأول</div><div class="sv" id="sv-g">0</div></div>
+      <div class="score-vs">جولات</div>
+      <div class="score-team"><div class="sn" id="sn-o">الفريق الثاني</div><div class="sv" id="sv-o">0</div></div>
+    </div>
 
-  /* filters */
-  const defs=document.createElementNS(ns,'defs');
-  [{id:'fy',sd:'4'},{id:'fg',sd:'4'},{id:'fo',sd:'4'}].forEach(({id,sd})=>{
-    const f=document.createElementNS(ns,'filter');
-    f.setAttribute('id',id);f.setAttribute('x','-50%');f.setAttribute('y','-50%');
-    f.setAttribute('width','200%');f.setAttribute('height','200%');
-    const fe=document.createElementNS(ns,'feGaussianBlur');
-    fe.setAttribute('stdDeviation',sd);fe.setAttribute('in','SourceGraphic');
-    f.appendChild(fe);defs.appendChild(f);
-  });
-  svg.appendChild(defs);
+    <div class="turn-indicator" id="turn-indicator">
+      <span class="turn-dot" style="background:#22c55e"></span>
+      <span>دور: الفريق الأول</span>
+    </div>
 
-  /* corners */
-  const tri=r*1.9;
-  [{p:`0,0 ${tri},0 0,${tri}`,f:'#14532d'},{p:`${W},${H} ${W-tri},${H} ${W},${H-tri}`,f:'#14532d'},
-   {p:`${W},0 ${W-tri},0 ${W},${tri}`,f:'#7c2d12'},{p:`0,${H} ${tri},${H} 0,${H-tri}`,f:'#7c2d12'}]
-  .forEach(({p,f})=>{
-    const el=document.createElementNS(ns,'polygon');
-    el.setAttribute('points',p);el.setAttribute('fill',f);svg.appendChild(el);
-  });
+    <input class="tin" id="name-g" value="الفريق الأول" placeholder="اسم الفريق الأول" maxlength="16" oninput="syncNames()"/>
+    <button class="tbtn" id="btn-g" onclick="pickTeam('green')">
+      <span class="chk" id="chk-g">✓</span>
+      <span id="lbl-g">الفريق الأول</span>
+      <span class="team-emoji">🟢</span>
+    </button>
 
-  /* hexes */
-  for(let row=0;row<N;row++){
-    const ox=(row%2)?hW/2:0;
-    for(let col=0;col<N;col++){
-      const cx=pad+hW/2+col*hW+ox,cy=pad+r+row*1.5*r,st=board[row][col];
-      const g=document.createElementNS(ns,'g');
-      g.style.cursor='pointer';
+    <input class="tin" id="name-o" value="الفريق الثاني" placeholder="اسم الفريق الثاني" maxlength="16" oninput="syncNames()"/>
+    <button class="tbtn" id="btn-o" onclick="pickTeam('orange')">
+      <span class="chk" id="chk-o">✓</span>
+      <span id="lbl-o">الفريق الثاني</span>
+      <span class="team-emoji">🟠</span>
+    </button>
 
-      /* glow */
-      if(st>0){
-        const gl=document.createElementNS(ns,'polygon');
-        gl.setAttribute('points',hpts(cx,cy,r+1));
-        const gc=['','rgba(250,204,21,.25)','rgba(34,197,94,.25)','rgba(249,115,22,.25)'][st];
-        gl.setAttribute('fill',gc);
-        gl.setAttribute('filter',`url(#${GLOWID[st]})`);
-        g.appendChild(gl);
-      }
+    <div class="divider"></div>
 
-      /* body */
-      const poly=document.createElementNS(ns,'polygon');
-      poly.setAttribute('points',hpts(cx,cy,r-2));
-      poly.setAttribute('fill',FILLS[st]);
-      poly.setAttribute('stroke',STROKES[st]);
-      poly.setAttribute('stroke-width',st===0?'1.4':'2.2');
+    <div class="hist-wrap">
+      <div class="hist-title">آخر الحركات</div>
+      <div class="hist-list" id="history-list">
+        <div class="hist-empty">لا توجد حركات بعد</div>
+      </div>
+    </div>
 
-      poly.addEventListener('mouseenter',()=>poly.setAttribute('fill',HOVERS[st]));
-      poly.addEventListener('mouseleave',()=>poly.setAttribute('fill',FILLS[st]));
-      g.addEventListener('click',()=>tap(row,col));
+    <div class="divider"></div>
 
-      g.appendChild(poly);
+    <button class="ctrl cw" onclick="newRound()">🔄 جولة جديدة</button>
+    <button class="ctrl cd" onclick="newGame()">🎮 لعبة جديدة</button>
+  </div>
+</div>
+</div><!-- /game-screen -->
 
-      /* letter */
-      const txt=document.createElementNS(ns,'text');
-      txt.setAttribute('x',cx);
-      txt.setAttribute('y',cy+r*.1);
-      txt.setAttribute('text-anchor','middle');
-      txt.setAttribute('dominant-baseline','middle');
-      txt.setAttribute('fill',TXTCOL[st]);
-      txt.setAttribute('font-family','Cairo,sans-serif');
-      txt.setAttribute('font-weight','700');
-      txt.setAttribute('font-size',Math.max(12,r*.52));
-      txt.setAttribute('pointer-events','none');
-      txt.textContent=letters[row][col];
-      g.appendChild(txt);
+<div class="cf-wrap" id="cf"></div>
 
-      svg.appendChild(g);
-    }
-  }
-}
+<!-- Round win overlay -->
+<div class="ov" id="ov-r">
+  <div class="ov-card">
+    <div class="ov-e" id="ov-r-e">🏅</div>
+    <div class="ov-t" id="ov-r-t">فاز الفريق!</div>
+    <div class="ov-s" id="ov-r-s">استمروا في اللعب</div>
+    <button class="ov-b" onclick="nextRound()">▶ الجولة التالية</button>
+  </div>
+</div>
 
-/* tap — cycle state */
-function tap(row,col){
-  board[row][col]=(board[row][col]+1)%4;
-  sync();draw();
-  if(wonBy(2)){setTimeout(()=>win('green'),200);return;}
-  if(wonBy(3)){setTimeout(()=>win('orange'),200);}
-}
+<!-- Game win overlay -->
+<div class="ov" id="ov-g">
+  <div class="gw-card">
+    <div class="gw-e">🏆</div>
+    <div class="gw-mbr">مبروك الفوز</div>
+    <div class="gw-nm" id="gw-nm">الفريق الأول</div>
+    <div class="gw-sub" id="gw-sub">فاز بجولتين وحسم البطولة!</div>
+    <div class="gw-btns">
+      <button class="gw-b" onclick="newGame()">🔄 مرة ثانية</button>
+      <button class="gw-b gw-b-menu" onclick="goToMenu()">🏠 القائمة</button>
+    </div>
+  </div>
+</div>
 
-/* win check */
-function nbrs(r,c){
-  const d=r%2?[[-1,0],[-1,1],[0,-1],[0,1],[1,0],[1,1]]:[[-1,-1],[-1,0],[0,-1],[0,1],[1,-1],[1,0]];
-  return d.map(([dr,dc])=>[r+dr,c+dc]).filter(([r,c])=>r>=0&&r<N&&c>=0&&c<N);
-}
-function wonBy(st){
-  const vis=new Set();
-  function dfs(r,c){
-    const k=r+','+c;if(vis.has(k))return false;vis.add(k);
-    if(st===2&&r===N-1)return true;
-    if(st===3&&c===N-1)return true;
-    return nbrs(r,c).some(([nr,nc])=>board[nr][nc]===st&&dfs(nr,nc));
-  }
-  if(st===2){for(let c=0;c<N;c++)if(board[0][c]===2&&dfs(0,c))return true;}
-  else      {for(let r=0;r<N;r++)if(board[r][0]===3&&dfs(r,0))return true;}
-  return false;
-}
-function win(team){
-  document.getElementById('wt').textContent=team==='green'?'فاز الفريق الأخضر 🟢':'فاز الفريق البرتقالي 🟠';
-  document.getElementById('ws').textContent=team==='green'?'أكمل الخط من الأعلى للأسفل':'أكمل الخط من اليمين لليسار';
-  document.getElementById('winlay').classList.add('on');
-}
-
-/* sync scores */
-function sync(){
-  let g=0,o=0;
-  board.forEach(row=>row.forEach(c=>{if(c===2)g++;if(c===3)o++;}));
-  document.getElementById('ng').textContent=g;
-  document.getElementById('no').textContent=o;
-}
-
-/* hex helpers */
-function hpts(cx,cy,r){
-  return Array.from({length:6},(_,i)=>{
-    const a=Math.PI/180*(60*i-30);
-    return `${cx+r*Math.cos(a)},${cy+r*Math.sin(a)}`;
-  }).join(' ');
-}
-function hPath(ctx,cx,cy,r){
-  ctx.beginPath();
-  for(let i=0;i<6;i++){
-    const a=Math.PI/180*(60*i-30);
-    i?ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a)):ctx.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a));
-  }
-  ctx.closePath();
-}
-
-window.addEventListener('resize',()=>{
-  if(document.getElementById('game').style.display==='flex')draw();
-});
-</script>
+<script src="game.js"></script>
 </body>
 </html>
