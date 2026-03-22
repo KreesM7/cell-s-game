@@ -9,11 +9,13 @@ html, body {
 /* ── Play area ── */
 .play { position:relative; flex:1; overflow:hidden; }
 
-/* Sharp 4-zone background matching screenshot */
-.bg-top    { position:absolute; inset:0; background:#3dba4e; clip-path:polygon(0 0,100% 0,60% 50%,40% 50%); }
-.bg-bottom { position:absolute; inset:0; background:#3dba4e; clip-path:polygon(40% 50%,60% 50%,100% 100%,0 100%); }
-.bg-left   { position:absolute; inset:0; background:#f57c22; clip-path:polygon(0 0,40% 50%,0 100%); }
-.bg-right  { position:absolute; inset:0; background:#f57c22; clip-path:polygon(100% 0,60% 50%,100% 100%); }
+/* Sharp 4-zone background — pointy-top orientation
+   Green  = top & bottom (team connects top→bottom)
+   Orange = left & right  (team connects left→right) */
+.bg-top    { position:absolute; inset:0; background:#3dba4e; clip-path:polygon(0 0,100% 0,100% 40%,50% 60%,0 40%); }
+.bg-bottom { position:absolute; inset:0; background:#3dba4e; clip-path:polygon(0 60%,50% 40%,100% 60%,100% 100%,0 100%); }
+.bg-left   { position:absolute; inset:0; background:#f57c22; clip-path:polygon(0 0,0 100%,40% 60%,60% 50%,40% 40%); }
+.bg-right  { position:absolute; inset:0; background:#f57c22; clip-path:polygon(100% 0,100% 100%,60% 60%,40% 50%,60% 40%); }
 
 #c { position:absolute; inset:0; width:100%; height:100%; display:block; }
 

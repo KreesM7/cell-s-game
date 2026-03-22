@@ -1,19 +1,18 @@
 // ═══════════════════════════════════════════════════════
-//  لعبة الخلية — Flat-top hexagons, 5×5, zero gap
+//  لعبة الخلية — Pointy-top hexagons, 5×5, zero gap
 //
-//  FLAT-TOP geometry:
-//    width  = 2 * R
-//    height = √3 * R
-//    col step (DX) = 1.5 * R        (horizontal, center-to-center)
-//    row step (DY) = √3 * R         (vertical,   center-to-center)
-//    odd COLS shift DOWN by DY/2
+//  POINTY-TOP geometry:
+//    width  = √3 * R
+//    height = 2 * R
+//    col step (DX) = √3 * R
+//    row step (DY) = 1.5 * R
+//    odd ROWS shift RIGHT by DX/2
 //
-//  Green  team: connects LEFT col (c=0) → RIGHT col (c=4)
-//  Orange team: connects TOP row (r=0)  → BOTTOM row (r=4)
-//  (matches image: green sides = left/right background)
+//  Green  team: connects TOP row (r=0) → BOTTOM row (r=4)
+//  Orange team: connects LEFT col (c=0) → RIGHT col (c=4)
 // ═══════════════════════════════════════════════════════
 
-const ALL_LETTERS = [...'ابتثجحخدذرزسشصضطظعغفقكلمنهوي']; // 28 unique
+const ALL_LETTERS = [...'ابتثجحخدذرزسشصضطظعغفقكلمنهوي'];
 const ROWS = 5, COLS = 5;
 
 let cells = [], selId = null, pendingTeam = null, hovId = null;
@@ -24,61 +23,39 @@ const cv  = document.getElementById('c');
 const ctx = cv.getContext('2d');
 let R = 60, GX = 0, GY = 0;
 
-// ──────────────────────────────────
-//  FLAT-TOP HEX POSITION
-//  col step = 1.5*R  (every col moves right 1.5*R)
-//  row step = √3*R   (every row moves down √3*R)
-//  odd columns are shifted DOWN by (√3*R)/2
-// ──────────────────────────────────
 function cxy(row, col) {
-  const DX = 1.5 * R;
-  const DY = Math.sqrt(3) * R;
+  const DX = Math.sqrt(3) * R;
+  const DY = 1.5 * R;
   return {
-    x: GX + col * DX,
-    y: GY + row * DY + (col % 2 === 1 ? DY / 2 : 0)
+    x: GX + col * DX + (row % 2 === 1 ? DX / 2 : 0),
+    y: GY + row * DY
   };
 }
 
-// Flat-top hex corners: angles 0°,60°,120°,180°,240°,300°
-function flatCorners(cx, cy, r) {
+function pointyCorners(cx, cy, r) {
   return Array.from({ length: 6 }, (_, i) => {
-    const a = (Math.PI / 3) * i; // 0, 60, 120, 180, 240, 300 degrees
+    const a = (Math.PI / 3) * i + Math.PI / 6;
     return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
   });
 }
 
-// ──────────────────────────────────
-//  NEIGHBORS (flat-top, odd-col down)
-// ──────────────────────────────────
 function nbrs(r, c) {
-  const odd = c % 2 === 1;
-  // Flat-top col-offset neighbors
-  const dirs = odd
-    ? [[0,-1],[0,1],[-1,-1],[-1,0],[-1,1],[1,0]]   // wrong - use correct below
-    : [[0,-1],[0,1],[-1,0],[1,-1],[1,0],[1,1]];
-
-  // Correct flat-top offset neighbors (odd-col shifted down):
+  const odd = r % 2 === 1;
   const nb = odd
-    ? [ [r-1,c], [r+1,c], [r,c-1], [r,c+1], [r-1,c-1], [r-1,c+1] ]
-    : [ [r-1,c], [r+1,c], [r,c-1], [r,c+1], [r+1,c-1], [r+1,c+1] ];
-
+    ? [ [r-1,c], [r-1,c+1], [r,c-1], [r,c+1], [r+1,c], [r+1,c+1] ]
+    : [ [r-1,c-1], [r-1,c], [r,c-1], [r,c+1], [r+1,c-1], [r+1,c] ];
   return nb.filter(([nr, nc]) => nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS);
 }
 
-// ──────────────────────────────────
-//  WIN CHECK
-//  Green:  left col (c=0) → right col (c=COLS-1)
-//  Orange: top row (r=0)  → bottom row (r=ROWS-1)
-// ──────────────────────────────────
 function won(team) {
   const owned = new Set(cells.filter(cl => cl.owner === team).map(cl => cl.id));
   if (team === 'green') {
-    const st = cells.filter(cl => cl.col === 0      && cl.owner === 'green').map(cl => cl.id);
-    const tg = new Set(cells.filter(cl => cl.col === COLS-1 && cl.owner === 'green').map(cl => cl.id));
+    const st = cells.filter(cl => cl.row === 0        && cl.owner === 'green').map(cl => cl.id);
+    const tg = new Set(cells.filter(cl => cl.row === ROWS-1 && cl.owner === 'green').map(cl => cl.id));
     return bfs(st, tg, owned);
   } else {
-    const st = cells.filter(cl => cl.row === 0      && cl.owner === 'orange').map(cl => cl.id);
-    const tg = new Set(cells.filter(cl => cl.row === ROWS-1 && cl.owner === 'orange').map(cl => cl.id));
+    const st = cells.filter(cl => cl.col === 0        && cl.owner === 'orange').map(cl => cl.id);
+    const tg = new Set(cells.filter(cl => cl.col === COLS-1 && cl.owner === 'orange').map(cl => cl.id));
     return bfs(st, tg, owned);
   }
 }
@@ -99,33 +76,23 @@ function bfs(starts, targets, owned) {
   return false;
 }
 
-// ──────────────────────────────────
-//  HIT TEST (flat-top hex)
-// ──────────────────────────────────
-function inFlatHex(px, py, cx, cy, r) {
-  // Transform to hex-local coords
+function inPointyHex(px, py, cx, cy, r) {
   const dx = Math.abs(px - cx);
   const dy = Math.abs(py - cy);
-  // Flat-top: width=2r, half-height=√3/2*r
-  if (dx > r) return false;
-  if (dy > (Math.sqrt(3) / 2) * r) return false;
-  // Corner cut: the angled edge
-  return dy <= Math.sqrt(3) * (r - dx);
+  if (dy > r) return false;
+  if (dx > (Math.sqrt(3) / 2) * r) return false;
+  return dx <= Math.sqrt(3) * (r - dy);
 }
 
 function cellAt(px, py) {
-  // Check in reverse so topmost drawn cells get priority
   for (let i = cells.length - 1; i >= 0; i--) {
     const cell = cells[i];
     const { x, y } = cxy(cell.row, cell.col);
-    if (inFlatHex(px, py, x, y, R)) return cell;
+    if (inPointyHex(px, py, x, y, R)) return cell;
   }
   return null;
 }
 
-// ──────────────────────────────────
-//  BUILD — 25 unique letters
-// ──────────────────────────────────
 function build() {
   const pool = [...ALL_LETTERS].sort(() => Math.random() - .5).slice(0, ROWS * COLS);
   pool.sort(() => Math.random() - .5);
@@ -136,10 +103,6 @@ function build() {
       cells.push({ id: `${r}_${c}`, row: r, col: c, letter: pool[i++], owner: null });
 }
 
-// ──────────────────────────────────
-//  DRAW — matching screenshot exactly
-//  White fill, thick purple border, dark purple letters
-// ──────────────────────────────────
 function draw() {
   ctx.clearRect(0, 0, cv.width, cv.height);
 
@@ -148,23 +111,19 @@ function draw() {
     const isSel = selId === cell.id;
     const isHov = hovId === cell.id && !cell.owner;
 
-    // ── Outer (border) — full R ──
     const BORDER = R * 0.14;
-    const outerC = flatCorners(x, y, R);
+    const outerC = pointyCorners(x, y, R);
     ctx.beginPath();
     ctx.moveTo(...outerC[0]);
     for (let i = 1; i < 6; i++) ctx.lineTo(...outerC[i]);
     ctx.closePath();
-
-    // Border color matches image: rich purple/indigo
     ctx.fillStyle =
         cell.owner === 'green'  ? '#14532d'
       : cell.owner === 'orange' ? '#7c2d12'
-      : '#4c1d95'; // deep purple — exactly like screenshot
+      : '#4c1d95';
     ctx.fill();
 
-    // ── Inner (fill) — inset by BORDER ──
-    const innerC = flatCorners(x, y, R - BORDER);
+    const innerC = pointyCorners(x, y, R - BORDER);
     ctx.beginPath();
     ctx.moveTo(...innerC[0]);
     for (let i = 1; i < 6; i++) ctx.lineTo(...innerC[i]);
@@ -173,29 +132,26 @@ function draw() {
     let fill;
     if      (cell.owner === 'green')  fill = '#4ade80';
     else if (cell.owner === 'orange') fill = '#fb923c';
-    else if (isSel)                   fill = '#fde047'; // yellow selected
+    else if (isSel)                   fill = '#fde047';
     else if (isHov)
       fill = pendingTeam === 'green'  ? '#bbf7d0'
            : pendingTeam === 'orange' ? '#fed7aa'
-           : '#f5f3ff'; // near-white with hint of purple
-    else fill = '#ffffff'; // pure white — matching screenshot
+           : '#f5f3ff';
+    else fill = '#ffffff';
 
     ctx.fillStyle = fill;
     ctx.fill();
 
-    // ── Letter ──
-    const fs = Math.round(R * 0.58);
+    const fs = Math.round(R * 0.52);
     ctx.font = `900 ${fs}px Cairo, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
     if (cell.owner) {
-      // White letters on colored cells
       ctx.fillStyle = '#ffffff';
       ctx.shadowColor = 'rgba(0,0,0,0.3)';
       ctx.shadowBlur = 4; ctx.shadowOffsetY = 1;
     } else {
-      // Deep purple letters — matching screenshot exactly
       ctx.fillStyle = '#5b21b6';
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
@@ -206,39 +162,27 @@ function draw() {
   });
 }
 
-// ──────────────────────────────────
-//  RESIZE — maximize hex to fill play area
-//  Flat-top 5×5 grid dimensions:
-//    gridW = (COLS-1)*1.5*R + 2*R = (1.5*COLS + 0.5)*R
-//    gridH = (ROWS-1)*√3*R + √3*R + DY/2 = (ROWS - 0.5)*√3*R
-//           (odd cols shift down by DY/2)
-// ──────────────────────────────────
 function resize() {
   const el = document.getElementById('play');
   const W = el.clientWidth, H = el.clientHeight;
   cv.width = W; cv.height = H;
 
-  const pad = 0.09; // 9% padding
-  // gridW = (1.5*(COLS-1) + 2) * R
-  // gridH = (ROWS - 0.5) * √3 * R
-  const byW = W * (1 - pad*2) / (1.5*(COLS-1) + 2);
-  const byH = H * (1 - pad*2) / ((ROWS - 0.5) * Math.sqrt(3));
+  const pad = 0.09;
+  const byW = W * (1 - pad*2) / ((COLS - 0.5) * Math.sqrt(3));
+  const byH = H * (1 - pad*2) / (1.5*(ROWS-1) + 2);
   R = Math.min(byW, byH);
 
-  const DX = 1.5 * R;
-  const DY = Math.sqrt(3) * R;
-  const gridW = (COLS - 1) * DX + 2 * R;
-  const gridH = (ROWS - 0.5) * DY;
+  const DX = Math.sqrt(3) * R;
+  const DY = 1.5 * R;
+  const gridW = (COLS - 0.5) * DX;
+  const gridH = (ROWS - 1) * DY + 2 * R;
 
-  GX = (W - gridW) / 2 + R;
-  GY = (H - gridH) / 2 + DY / 2;
+  GX = (W - gridW) / 2 + DX / 2;
+  GY = (H - gridH) / 2 + R;
 
   draw();
 }
 
-// ──────────────────────────────────
-//  MOUSE & TOUCH
-// ──────────────────────────────────
 function sxy(e) {
   const rect = cv.getBoundingClientRect();
   const sx = cv.width / rect.width, sy = cv.height / rect.height;
@@ -268,9 +212,6 @@ cv.addEventListener('touchend', e => {
   onCell(cell.id);
 }, { passive: false });
 
-// ──────────────────────────────────
-//  INTERACTION
-// ──────────────────────────────────
 function pickTeam(t) {
   pendingTeam = t;
   document.getElementById('btn-g').classList.toggle('active', t === 'green');
@@ -304,9 +245,6 @@ function clearSt() {
   draw();
 }
 
-// ──────────────────────────────────
-//  NAME SYNC & SCORE
-// ──────────────────────────────────
 function syncNames() {
   names.green  = document.getElementById('name-g').value.trim() || 'الفريق الأول';
   names.orange = document.getElementById('name-o').value.trim() || 'الفريق الثاني';
@@ -321,9 +259,6 @@ function updateScore() {
   document.getElementById('sv-o').textContent = wins.orange;
 }
 
-// ──────────────────────────────────
-//  OVERLAYS
-// ──────────────────────────────────
 const RN = ['','الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة'];
 
 function showRoundWin(team) {
@@ -363,9 +298,6 @@ function newGame() {
   updateScore(); build(); clearSt();
 }
 
-// ──────────────────────────────────
-//  CONFETTI
-// ──────────────────────────────────
 function spawnConfetti() {
   const wrap = document.getElementById('cf'); wrap.innerHTML = '';
   const cols = ['#f9e000','#22c55e','#f97316','#fff','#e879f9','#38bdf8','#f43f5e'];
@@ -383,9 +315,6 @@ function spawnConfetti() {
   setTimeout(() => wrap.innerHTML = '', 6500);
 }
 
-// ──────────────────────────────────
-//  INIT
-// ──────────────────────────────────
 build();
 syncNames();
 window.addEventListener('resize', resize);
