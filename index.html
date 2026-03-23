@@ -142,6 +142,24 @@
         <div class="howto-row"><span class="hd yellow-hd"></span><span>أول فريق يفوز بعدد الجولات المحددة يحسم البطولة</span></div>
       </div>
 
+      <!-- ══ GAME MODES ══ -->
+      <div class="menu-sep"></div>
+      <div class="mf-label" style="color:#f9e000;font-size:.78rem;letter-spacing:.5px">⚡ أوضاع اللعبة</div>
+
+      <!-- Powers Mode -->
+      <div class="gamemode-card" id="gm-powers" onclick="togglePowersMode()">
+        <div class="gm-left">
+          <div class="gm-icon">⚡</div>
+          <div class="gm-info">
+            <div class="gm-name">وضع القوى</div>
+            <div class="gm-desc">كل إجابة صحيحة تمنح قوة عشوائية للفريق</div>
+          </div>
+        </div>
+        <div class="gm-toggle" id="gm-powers-toggle">
+          <div class="gm-toggle-knob"></div>
+        </div>
+      </div>
+
       <!-- Start -->
       <button class="menu-start-btn" onclick="startGame()">ابدأ اللعبة ◄</button>
       <div class="menu-version" id="menu-version">v3.0 — لعبة الخلية</div>
@@ -168,6 +186,11 @@
       <button class="tool-btn" id="reveal-btn" onclick="toggleReveal()" title="وضع الكشف">👁</button>
       <button class="tool-btn" onclick="undoMove()" title="تراجع">↩</button>
     </div>
+    <!-- block power activation (only visible when block is active) -->
+    <div id="block-bar" style="display:none;width:100%">
+      <button class="block-bar-btn" onclick="useBlock('green')">🚫 احجب الأخضر</button>
+      <button class="block-bar-btn" onclick="useBlock('orange')">🚫 احجب البرتقالي</button>
+    </div>
     <div class="side-logo">
       <span class="side-logo-w1">لعبة</span>
       <span class="side-logo-w2" id="game-title-bar">الخلية</span>
@@ -190,10 +213,13 @@
     <button class="tbtn" id="btn-g" onclick="pickTeam('green')">
       <span class="chk" id="chk-g">✓</span><span id="lbl-g">الفريق الأول</span><span class="team-dot-g"></span>
     </button>
+    <button class="power-badge" id="power-badge-g" style="display:none;background:rgba(56,189,248,.2);border-color:#38bdf8"></button>
+
     <input class="tin" id="name-o" value="الفريق الثاني" placeholder="الفريق الثاني" maxlength="16" oninput="syncNames()"/>
     <button class="tbtn" id="btn-o" onclick="pickTeam('orange')">
       <span class="chk" id="chk-o">✓</span><span id="lbl-o">الفريق الثاني</span><span class="team-dot-o"></span>
     </button>
+    <button class="power-badge" id="power-badge-o" style="display:none;background:rgba(56,189,248,.2);border-color:#38bdf8"></button>
     <div class="divider"></div>
     <div class="hist-wrap">
       <div class="hist-title">آخر الحركات</div>
@@ -273,6 +299,13 @@ function buildCustomRoundInputs(){
   }
 }
 buildCustomRoundInputs();
+function togglePowersMode(){
+  powersMode=!powersMode;
+  const card=document.getElementById('gm-powers');
+  const tog=document.getElementById('gm-powers-toggle');
+  card.classList.toggle('gm-on',powersMode);
+  tog.classList.toggle('gm-tog-on',powersMode);
+}
 // keep old names working
 function toggleHowto(){ toggleSection('howto-body','howto-arrow'); }
 function toggleCustomRounds(){ toggleSection('custom-rounds-body','cr-arrow'); }
