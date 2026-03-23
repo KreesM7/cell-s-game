@@ -430,7 +430,17 @@ function sxy(e) {
   const src=e.touches?e.changedTouches[0]:e;
   return { px:(src.clientX-rect.left)*sx, py:(src.clientY-rect.top)*sy };
 }
+// Returns true if any overlay or cinematic is currently showing — block input then
+function isBlocked() {
+  if (document.getElementById('round-transition'))  return true;
+  if (document.getElementById('winner-transition')) return true;
+  if (document.getElementById('ov-r')?.classList.contains('show')) return true;
+  if (document.getElementById('ov-g')?.classList.contains('show')) return true;
+  return false;
+}
+
 cv.addEventListener('mousemove', e => {
+  if (isBlocked()) { cv.style.cursor='default'; return; }
   const {px,py}=sxy(e), cell=cellAt(px,py);
   const nh=cell?cell.id:null;
   if (nh!==hovId) { hovId=nh; draw(); }
@@ -439,11 +449,13 @@ cv.addEventListener('mousemove', e => {
 });
 cv.addEventListener('mouseleave', ()=>{ hovId=null; draw(); });
 cv.addEventListener('click', e => {
+  if (isBlocked()) return;
   unlockAudio();
   const {px,py}=sxy(e), cell=cellAt(px,py);
   if (!cell) return; onCell(cell.id);
 });
 cv.addEventListener('touchend', e => {
+  if (isBlocked()) { e.preventDefault(); return; }
   e.preventDefault(); unlockAudio();
   const {px,py}=sxy(e), cell=cellAt(px,py);
   if (!cell) return; onCell(cell.id);
@@ -453,6 +465,7 @@ cv.addEventListener('touchend', e => {
 //  GAME LOGIC — click cycle
 // ═══════════════════════════════════════════════════════
 function pickTeam(t) {
+  if (isBlocked()) return;
   unlockAudio();
   pendingTeam=t;
   document.getElementById('btn-g').classList.toggle('active', t==='green');
