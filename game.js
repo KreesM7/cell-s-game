@@ -3,29 +3,29 @@
 // ═══════════════════════════════════════════════════════
 
 const ALL_LETTERS = [...'ابتثجحخدذرزسشصضطظعغفقكلمنهوي'];
-let ROWS = 5, COLS = 5;
-let gridSize = 5; // controlled from menu
+var ROWS = 5, COLS = 5;
+var gridSize = 5; // controlled from menu
 
 // ── State ──────────────────────────────────────────────
-let cells = [], selId = null, pendingTeam = null, hovId = null;
-let wins = { green: 0, orange: 0 };
-let seriesWins = { green: 0, orange: 0 }; // across multiple games (best-of)
-let rNum = 1;
-let winsToWin = 2;
-let roundEnded = false; // prevents duplicate win scoring
-let names  = { green: 'الفريق الأول', orange: 'الفريق الثاني' };
-let teamFill   = { green: '#4ade80', orange: '#fb923c' };
-let teamBorder = { green: '#14532d', orange: '#7c2d12' };
-let teamZone   = { green: '#3dba4e', orange: '#f57c22' };
-let moveHistory = [];
-let moveNum = 0;
-let isDark = true;
-let sideCollapsed = false;
-let isMuted = false;
-let revealMode = false;   // letters hidden until claimed
-let undoStack  = [];      // [{id, prevOwner}]
-let roundHistory = [];    // [{rNum, winner, name}] — match summary
-let customRoundNames = []; // set from menu
+var cells = [], selId = null, pendingTeam = null, hovId = null;
+var wins = { green: 0, orange: 0 };
+var seriesWins = { green: 0, orange: 0 }; // across multiple games (best-of)
+var rNum = 1;
+var winsToWin = 2;
+var roundEnded = false; // prevents duplicate win scoring
+var names  = { green: 'الفريق الأول', orange: 'الفريق الثاني' };
+var teamFill   = { green: '#4ade80', orange: '#fb923c' };
+var teamBorder = { green: '#14532d', orange: '#7c2d12' };
+var teamZone   = { green: '#3dba4e', orange: '#f57c22' };
+var moveHistory = [];
+var moveNum = 0;
+var isDark = true;
+var sideCollapsed = false;
+var isMuted = false;
+var revealMode = false;   // letters hidden until claimed
+var undoStack  = [];      // [{id, prevOwner}]
+var roundHistory = [];    // [{rNum, winner, name}] — match summary
+var customRoundNames = []; // set from menu
 
 const cv  = document.getElementById('c');
 const ctx = cv.getContext('2d');
@@ -1106,11 +1106,11 @@ document.addEventListener('DOMContentLoaded',()=>{
 //  POWERS GAME MODE
 // ══════════════════════════════════════════════════════
 
-let powersMode = false;
-let heldPowers  = { green: null, orange: null };
-let shieldedCells = new Set();
-let blockedTeam = null; // team whose NEXT correct answer is blocked by presenter
-let powerPickMode = null;
+var powersMode = false;
+var heldPowers  = { green: null, orange: null };
+var shieldedCells = new Set();
+var blockedTeam = null; // team whose NEXT correct answer is blocked by presenter
+var powerPickMode = null;
 
 // Powers redesigned for PRESENTER-based game (no time pressure)
 const POWERS = [
