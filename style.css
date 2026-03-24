@@ -67,12 +67,12 @@ html,body{width:100vw;height:100vh;overflow:hidden;font-family:'Tajawal',sans-se
 .menu-version{text-align:center;font-size:.58rem;color:rgba(255,255,255,.24);margin-top:-4px;}
 
 /* ══ SETTINGS DRAWER ════════════════════════════════════ */
-.settings-drawer{position:fixed;inset:0;z-index:500;pointer-events:none;}
+.settings-drawer{position:fixed;inset:0;z-index:500;pointer-events:none;display:flex;align-items:center;justify-content:center;}
 .settings-drawer.settings-open{pointer-events:all;}
 .settings-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.7);opacity:0;transition:opacity .3s;backdrop-filter:blur(3px);}
 .settings-open .settings-backdrop{opacity:1;}
-.settings-panel{position:absolute;bottom:0;left:0;right:0;max-height:85vh;background:linear-gradient(180deg,#1e0850,#130430);border-radius:24px 24px 0 0;border-top:1.5px solid rgba(140,90,255,.25);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .35s cubic-bezier(.25,.8,.25,1);box-shadow:0 -12px 40px rgba(0,0,0,.6);}
-.settings-open .settings-panel{transform:translateY(0);}
+.settings-panel{position:relative;width:min(560px,92vw);max-height:82vh;background:linear-gradient(180deg,#1e0850,#130430);border-radius:24px;border:1.5px solid rgba(140,90,255,.25);display:flex;flex-direction:column;transform:scale(.92) translateY(20px);opacity:0;transition:transform .35s cubic-bezier(.25,.8,.25,1),opacity .35s;box-shadow:0 24px 60px rgba(0,0,0,.7);}
+.settings-open .settings-panel{transform:scale(1) translateY(0);opacity:1;}
 .settings-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
 .settings-title{font-family:'Tajawal',sans-serif;font-size:1rem;font-weight:800;color:#fff;direction:rtl;}
 .settings-close{background:rgba(255,255,255,.1);border:none;border-radius:50%;width:32px;height:32px;color:#fff;font-size:1rem;cursor:pointer;transition:background .18s;display:flex;align-items:center;justify-content:center;}

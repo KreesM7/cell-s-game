@@ -651,6 +651,8 @@ function updateScore(){
   if(wEl) wEl.textContent=winsToWin;
   // sync mobile bar
   if(typeof syncMobileBar==='function') syncMobileBar();
+  const sg=document.getElementById('series-g');
+  const so=document.getElementById('series-o');
   if(sg) sg.textContent=seriesWins.green;
   if(so) so.textContent=seriesWins.orange;
 }
