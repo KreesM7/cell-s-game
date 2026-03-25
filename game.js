@@ -21,7 +21,7 @@ var claimCount = { green: 0, orange: 0 }; // powers every 3 answers
 var names = { green: 'الفريق الأول', orange: 'الفريق الثاني' };
 var teamFill = { green: '#4ade80', orange: '#fb923c' };
 var teamBorder = { green: '#14532d', orange: '#7c2d12' };
-var teamZone = { green: '#4ade80', orange: '#fb923c' };
+var teamZone = { green: '#3dba4e', orange: '#f57c22' };
 var moveHistory = [];
 var moveNum = 0;
 var isDark = true;
@@ -46,7 +46,7 @@ function applyTheme() {
   root.style.setProperty('--side-sub',     'rgba(255,255,255,0.55)');
   root.style.setProperty('--score-bg',     'rgba(0,0,0,0.25)');
   root.style.setProperty('--divider',      'rgba(255,255,255,0.12)');
-  document.body.style.background = '#1a0533';
+  document.body.style.background = '#2d0a6e';
   applyTeamColors();
   const mb = document.getElementById('menu-theme-btn');
   if (mb) mb.textContent = isMuted ? '🔇' : '🔊';
@@ -226,27 +226,31 @@ function build() {
 function drawBackground() {
   const W=cv.width,H=cv.height;
   const P=(r,c)=>pointyCorners(cxy(r,c).x,cxy(r,c).y,R);
-
-  // ── Flat team zone fills (match reference exactly) ──
-  // Green top zone
-  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(W,0);
+  const grad=ctx.createRadialGradient(W*.5,H*.45,0,W*.5,H*.45,Math.max(W,H)*.8);
+  grad.addColorStop(0,'#7c35c5');grad.addColorStop(.5,'#5b1fa0');grad.addColorStop(1,'#3a0d6e');
+  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+  // hex grid overlay
+  const hexR=R*1.05,DX2=1.5*hexR,DY2=Math.sqrt(3)*hexR;
+  for(let row2=-1;row2<Math.ceil(H/DY2)+3;row2++)
+    for(let col2=-1;col2<Math.ceil(W/DX2)+3;col2++){
+      const hx=col2*DX2,hy=row2*DY2+(col2%2===1?DY2/2:0);
+      const pts=Array.from({length:6},(_,i)=>{const a=(Math.PI/3)*i;return[hx+hexR*Math.cos(a),hy+hexR*Math.sin(a)];});
+      ctx.beginPath();ctx.moveTo(...pts[0]);for(let i=1;i<6;i++)ctx.lineTo(...pts[i]);ctx.closePath();
+      ctx.strokeStyle='rgba(200,160,255,0.06)';ctx.lineWidth=1.2;ctx.stroke();
+    }
+  // team zones
+  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(W,0);
   for(let c=COLS-1;c>=0;c--){const p=P(0,c);ctx.lineTo(...p[0]);ctx.lineTo(...p[1]);ctx.lineTo(...p[2]);}
-  ctx.closePath(); ctx.fillStyle=teamZone.green; ctx.fill();
-
-  // Green bottom zone
-  ctx.beginPath(); ctx.moveTo(0,H); ctx.lineTo(W,H);
+  ctx.closePath();ctx.fillStyle=teamZone.green;ctx.fill();
+  ctx.beginPath();ctx.moveTo(0,H);ctx.lineTo(W,H);
   for(let c=COLS-1;c>=0;c--){const p=P(ROWS-1,c);ctx.lineTo(...p[5]);ctx.lineTo(...p[4]);ctx.lineTo(...p[3]);}
-  ctx.closePath(); ctx.fillStyle=teamZone.green; ctx.fill();
-
-  // Orange left zone
-  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,H);
+  ctx.closePath();ctx.fillStyle=teamZone.green;ctx.fill();
+  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,H);
   for(let r=ROWS-1;r>=0;r--){const p=P(r,0);ctx.lineTo(...p[1]);ctx.lineTo(...p[0]);ctx.lineTo(...p[5]);ctx.lineTo(...p[4]);}
-  ctx.closePath(); ctx.fillStyle=teamZone.orange; ctx.fill();
-
-  // Orange right zone
-  ctx.beginPath(); ctx.moveTo(W,0); ctx.lineTo(W,H);
+  ctx.closePath();ctx.fillStyle=teamZone.orange;ctx.fill();
+  ctx.beginPath();ctx.moveTo(W,0);ctx.lineTo(W,H);
   for(let r=ROWS-1;r>=0;r--){const p=P(r,COLS-1);ctx.lineTo(...p[1]);ctx.lineTo(...p[2]);ctx.lineTo(...p[3]);ctx.lineTo(...p[4]);}
-  ctx.closePath(); ctx.fillStyle=teamZone.orange; ctx.fill();
+  ctx.closePath();ctx.fillStyle=teamZone.orange;ctx.fill();
 }
 
 // ══════════════════════════════════════════════════════
@@ -255,67 +259,84 @@ function drawBackground() {
 function draw() {
   ctx.clearRect(0,0,cv.width,cv.height);
   drawBackground();
-
   cells.forEach(cell=>{
     const {x,y}=cxy(cell.row,cell.col);
     const isSel=selId===cell.id, isHov=hovId===cell.id;
-    const owned=cell.owner;
-
+    const BORDER=R*0.10; // softer border
     const nextStep=!pendingTeam&&isHov?(
-        (!owned&&!isSel)?'select'
-      :(isSel&&!owned)?'assign'
-      :owned==='green'?'orange'
-      :owned==='orange'?'clear':null):null;
+        (!cell.owner&&!isSel)?'select'
+      :(isSel&&!cell.owner)?'green'
+      :cell.owner==='green'?'orange'
+      :cell.owner==='orange'?'clear':null):null;
 
+    // ── Outer hex (subtle shadow ring) ──
     const outerC=pointyCorners(x,y,R);
-    const innerC=pointyCorners(x,y,R*0.88); // slight gap = the "stroke"
-
-    // ── Draw outer hex (acts as border) ──
     ctx.beginPath();ctx.moveTo(...outerC[0]);for(let i=1;i<6;i++)ctx.lineTo(...outerC[i]);ctx.closePath();
-    if(owned==='green')       ctx.fillStyle=teamFill.green;
-    else if(owned==='orange') ctx.fillStyle=teamFill.orange;
-    else if(isSel)            ctx.fillStyle='#c4b5fd'; // light purple border for selected
-    else if(nextStep==='assign') ctx.fillStyle='#a78bfa';
-    else                      ctx.fillStyle='#4c1d95'; // dark purple border for unowned
+    // owned: team dark color | selected: amber | default: dark purple
+    ctx.fillStyle=cell.owner==='green'?darken(teamFill.green,.45)
+                 :cell.owner==='orange'?darken(teamFill.orange,.45)
+                 :isSel?'#78350f':'#2e1065';
     ctx.fill();
 
-    // ── Draw inner hex (the cell face) ──
+    // ── Inner fill ──
+    const innerC=pointyCorners(x,y,R-BORDER);
     ctx.beginPath();ctx.moveTo(...innerC[0]);for(let i=1;i<6;i++)ctx.lineTo(...innerC[i]);ctx.closePath();
-    if(owned==='green')       ctx.fillStyle=teamFill.green;
-    else if(owned==='orange') ctx.fillStyle=teamFill.orange;
-    else if(isSel)            ctx.fillStyle='#ede9fe'; // very light lavender when selected
-    else if(pendingTeam&&isHov) ctx.fillStyle=pendingTeam==='green'?lighten(teamFill.green,.6):lighten(teamFill.orange,.6);
-    else if(nextStep==='assign') ctx.fillStyle='#ddd6fe';
-    else if(nextStep==='orange') ctx.fillStyle=lighten(teamFill.orange,.6);
-    else if(nextStep==='clear')  ctx.fillStyle='#fee2e2';
-    else                         ctx.fillStyle='#ffffff'; // clean white
-    ctx.fill();
+    let fill;
+    if(cell.owner==='green') fill=teamFill.green;
+    else if(cell.owner==='orange') fill=teamFill.orange;
+    else if(isSel) fill='#fde047';
+    else if(pendingTeam&&isHov) fill=lighten(pendingTeam==='green'?teamFill.green:teamFill.orange,.55);
+    else if(nextStep==='select') fill='#fef9c3';
+    else if(nextStep==='green') fill=lighten(teamFill.green,.55);
+    else if(nextStep==='orange') fill=lighten(teamFill.orange,.55);
+    else if(nextStep==='clear') fill='#fee2e2';
+    else fill='#f5f3ff';
+    ctx.fillStyle=fill; ctx.fill();
 
-    // ── Shield ring ──
+    // ── Shield glow ──
     if(shieldedCells.has(cell.id)){
       ctx.beginPath();ctx.moveTo(...outerC[0]);for(let i=1;i<6;i++)ctx.lineTo(...outerC[i]);ctx.closePath();
-      ctx.strokeStyle='#38bdf8';ctx.lineWidth=R*.04;ctx.globalAlpha=.8;ctx.stroke();ctx.globalAlpha=1;
+      ctx.strokeStyle='#38bdf8';ctx.lineWidth=R*.05;ctx.globalAlpha=.75;ctx.stroke();ctx.globalAlpha=1;
     }
 
-    // ── Hover outline only ──
-    if(isHov&&!owned){
+    // ── Hover ring ──
+    if(nextStep&&!pendingTeam){
+      const dc=nextStep==='select'?'#fde047':nextStep==='green'?teamFill.green:nextStep==='orange'?teamFill.orange:'#ef4444';
       ctx.beginPath();ctx.moveTo(...outerC[0]);for(let i=1;i<6;i++)ctx.lineTo(...outerC[i]);ctx.closePath();
-      const hc=nextStep==='select'||nextStep==='assign'?'#7c3aed':nextStep==='orange'?teamFill.orange:'#ef4444';
-      ctx.strokeStyle=hc;ctx.lineWidth=R*.03;ctx.globalAlpha=.5;ctx.stroke();ctx.globalAlpha=1;
+      ctx.strokeStyle=dc;ctx.lineWidth=R*.05;ctx.globalAlpha=.5;ctx.stroke();ctx.globalAlpha=1;
     }
 
-    // ── Letter: only shown when UNOWNED ──
-    // Owned cells show NO letter — just the pure team color
-    if(!owned){
-      const showQuestion=revealMode&&!cell.revealed;
-      const letter=showQuestion?'؟':cell.letter;
-      const fs=Math.round(R*.50);
-      ctx.font=`800 ${fs}px Tajawal,sans-serif`;
-      ctx.textAlign='center'; ctx.textBaseline='middle';
+    // ── Selected yellow ring ──
+    if(isSel){
+      ctx.beginPath();ctx.moveTo(...outerC[0]);for(let i=1;i<6;i++)ctx.lineTo(...outerC[i]);ctx.closePath();
+      ctx.strokeStyle='#fde047';ctx.lineWidth=R*.05;ctx.globalAlpha=.85;ctx.stroke();ctx.globalAlpha=1;
+    }
+
+    // ── Letter (clean, no harsh strokes) ──
+    const showQuestion=revealMode&&!cell.revealed&&!cell.owner;
+    const letter=showQuestion?'؟':cell.letter;
+    const fs=Math.round(R*.52);
+    ctx.font=`800 ${fs}px Tajawal,sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+
+    if(cell.owner){
+      // owned: white letter, subtle dark shadow for depth
+      ctx.fillStyle='#ffffff';
+      ctx.shadowColor='rgba(0,0,0,.35)'; ctx.shadowBlur=3; ctx.shadowOffsetY=1;
+      ctx.fillText(letter,x,y+fs*.04);
       ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
-      // dark purple letter on white/lavender cell
-      ctx.fillStyle=isSel?'#4c1d95':'#3b0764';
-      ctx.fillText(letter, x, y + fs*.04);
+    } else if(isSel){
+      // selected: deep purple on yellow
+      ctx.fillStyle='#1e0550';
+      ctx.fillText(letter,x,y+fs*.04);
+    } else if(showQuestion){
+      ctx.fillStyle='rgba(255,255,255,.35)';
+      ctx.fillText(letter,x,y+fs*.04);
+    } else {
+      // unowned: dark purple on light fill
+      ctx.fillStyle='#2e1065';
+      ctx.fillText(letter,x,y+fs*.04);
     }
   });
 }
@@ -335,18 +356,13 @@ function darken(hex,amt){
 // ══════════════════════════════════════════════════════
 function resize(){
   const el=document.getElementById('play');
-  const W=el.clientWidth, H=el.clientHeight;
-  cv.width=W; cv.height=H;
-  // Use 94% of available space so grid is large and centered
-  const pad=0.06;
-  R=Math.min(
-    W*(1-pad*2)/((COLS-.5)*Math.sqrt(3)),
-    H*(1-pad*2)/(1.5*(ROWS-1)+2)
-  );
-  const DX=Math.sqrt(3)*R, DY=1.5*R;
-  // Center grid exactly
-  GX=(W-(COLS-.5)*DX)/2 + DX/2;
-  GY=(H-((ROWS-1)*DY+2*R))/2 + R;
+  const W=el.clientWidth,H=el.clientHeight;
+  cv.width=W;cv.height=H;
+  const pad=.09;
+  R=Math.min(W*(1-pad*2)/((COLS-.5)*Math.sqrt(3)),H*(1-pad*2)/(1.5*(ROWS-1)+2));
+  const DX=Math.sqrt(3)*R,DY=1.5*R;
+  GX=(W-(COLS-.5)*DX)/2+DX/2;
+  GY=(H-((ROWS-1)*DY+2*R))/2+R;
   draw();
 }
 
@@ -635,6 +651,8 @@ function updateScore(){
   if(wEl) wEl.textContent=winsToWin;
   // sync mobile bar
   if(typeof syncMobileBar==='function') syncMobileBar();
+  const sg=document.getElementById('series-g');
+  const so=document.getElementById('series-o');
   if(sg) sg.textContent=seriesWins.green;
   if(so) so.textContent=seriesWins.orange;
 }
@@ -1072,7 +1090,7 @@ function onGameNameInput(val){
 function onColorChange(team,hex){
   teamFill[team]=hex;
   teamBorder[team]=darken(hex,.35);
-  teamZone[team]=hex; // zone same as fill
+  teamZone[team]=darken(hex,.75);
   applyTeamColors();
   if(cv&&cv.width) draw();
 }
