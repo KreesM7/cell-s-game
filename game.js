@@ -3,10 +3,8 @@
 // ═══════════════════════════════════════════════════════
 
 const ALL_LETTERS = [...'ابتثجحخدذرزسشصضطظعغفقكلمنهوي'];
-// Arabic-indic numerals for extra cells in larger grids (7×7 needs 49, letters=28, so 21 extras)
-const ALL_EXTRAS = ['١','٢','٣','٤','٥','٦','٧','٨','٩','١٠','١١','١٢','١٣','١٤','١٥','١٦','١٧','١٨','١٩','٢٠','٢١'];
-// Full unique pool: 28 letters + 21 numerals = 49 (covers up to 7×7 with NO repeats)
-const ALL_CONTENT = [...ALL_LETTERS, ...ALL_EXTRAS];
+// Full pool: letters only — repeat to cover up to 7×7 (49 cells)
+const ALL_CONTENT = [...ALL_LETTERS, ...ALL_LETTERS].slice(0, 49);
 var ROWS = 5, COLS = 5;
 var gridSize = 5;
 
@@ -21,7 +19,7 @@ var claimCount = { green: 0, orange: 0 }; // powers every 3 answers
 var names = { green: 'الفريق الأول', orange: 'الفريق الثاني' };
 var teamFill = { green: '#4ade80', orange: '#fb923c' };
 var teamBorder = { green: '#14532d', orange: '#7c2d12' };
-var teamZone = { green: '#4ade80', orange: '#fb923c' };
+var teamZone = { green: '#3dba4e', orange: '#f57c22' };
 var moveHistory = [];
 var moveNum = 0;
 var isDark = true;
@@ -46,7 +44,7 @@ function applyTheme() {
   root.style.setProperty('--side-sub',     'rgba(255,255,255,0.55)');
   root.style.setProperty('--score-bg',     'rgba(0,0,0,0.25)');
   root.style.setProperty('--divider',      'rgba(255,255,255,0.12)');
-  document.body.style.background = '#1a0533';
+  document.body.style.background = '#2d0a6e';
   applyTeamColors();
   const mb = document.getElementById('menu-theme-btn');
   if (mb) mb.textContent = isMuted ? '🔇' : '🔊';
@@ -226,27 +224,31 @@ function build() {
 function drawBackground() {
   const W=cv.width,H=cv.height;
   const P=(r,c)=>pointyCorners(cxy(r,c).x,cxy(r,c).y,R);
-
-  // ── Flat team zone fills (match reference exactly) ──
-  // Green top zone
-  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(W,0);
+  const grad=ctx.createRadialGradient(W*.5,H*.45,0,W*.5,H*.45,Math.max(W,H)*.8);
+  grad.addColorStop(0,'#7c35c5');grad.addColorStop(.5,'#5b1fa0');grad.addColorStop(1,'#3a0d6e');
+  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+  // hex grid overlay
+  const hexR=R*1.05,DX2=1.5*hexR,DY2=Math.sqrt(3)*hexR;
+  for(let row2=-1;row2<Math.ceil(H/DY2)+3;row2++)
+    for(let col2=-1;col2<Math.ceil(W/DX2)+3;col2++){
+      const hx=col2*DX2,hy=row2*DY2+(col2%2===1?DY2/2:0);
+      const pts=Array.from({length:6},(_,i)=>{const a=(Math.PI/3)*i;return[hx+hexR*Math.cos(a),hy+hexR*Math.sin(a)];});
+      ctx.beginPath();ctx.moveTo(...pts[0]);for(let i=1;i<6;i++)ctx.lineTo(...pts[i]);ctx.closePath();
+      ctx.strokeStyle='rgba(200,160,255,0.06)';ctx.lineWidth=1.2;ctx.stroke();
+    }
+  // team zones
+  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(W,0);
   for(let c=COLS-1;c>=0;c--){const p=P(0,c);ctx.lineTo(...p[0]);ctx.lineTo(...p[1]);ctx.lineTo(...p[2]);}
-  ctx.closePath(); ctx.fillStyle=teamZone.green; ctx.fill();
-
-  // Green bottom zone
-  ctx.beginPath(); ctx.moveTo(0,H); ctx.lineTo(W,H);
+  ctx.closePath();ctx.fillStyle=teamZone.green;ctx.fill();
+  ctx.beginPath();ctx.moveTo(0,H);ctx.lineTo(W,H);
   for(let c=COLS-1;c>=0;c--){const p=P(ROWS-1,c);ctx.lineTo(...p[5]);ctx.lineTo(...p[4]);ctx.lineTo(...p[3]);}
-  ctx.closePath(); ctx.fillStyle=teamZone.green; ctx.fill();
-
-  // Orange left zone
-  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,H);
+  ctx.closePath();ctx.fillStyle=teamZone.green;ctx.fill();
+  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,H);
   for(let r=ROWS-1;r>=0;r--){const p=P(r,0);ctx.lineTo(...p[1]);ctx.lineTo(...p[0]);ctx.lineTo(...p[5]);ctx.lineTo(...p[4]);}
-  ctx.closePath(); ctx.fillStyle=teamZone.orange; ctx.fill();
-
-  // Orange right zone
-  ctx.beginPath(); ctx.moveTo(W,0); ctx.lineTo(W,H);
+  ctx.closePath();ctx.fillStyle=teamZone.orange;ctx.fill();
+  ctx.beginPath();ctx.moveTo(W,0);ctx.lineTo(W,H);
   for(let r=ROWS-1;r>=0;r--){const p=P(r,COLS-1);ctx.lineTo(...p[1]);ctx.lineTo(...p[2]);ctx.lineTo(...p[3]);ctx.lineTo(...p[4]);}
-  ctx.closePath(); ctx.fillStyle=teamZone.orange; ctx.fill();
+  ctx.closePath();ctx.fillStyle=teamZone.orange;ctx.fill();
 }
 
 // ══════════════════════════════════════════════════════
@@ -255,67 +257,97 @@ function drawBackground() {
 function draw() {
   ctx.clearRect(0,0,cv.width,cv.height);
   drawBackground();
-
   cells.forEach(cell=>{
     const {x,y}=cxy(cell.row,cell.col);
     const isSel=selId===cell.id, isHov=hovId===cell.id;
-    const owned=cell.owner;
-
+    const BORDER=R*0.10; // softer border
     const nextStep=!pendingTeam&&isHov?(
-        (!owned&&!isSel)?'select'
-      :(isSel&&!owned)?'assign'
-      :owned==='green'?'orange'
-      :owned==='orange'?'clear':null):null;
+        (!cell.owner&&!isSel)?'select'
+      :(isSel&&!cell.owner)?'green'
+      :cell.owner==='green'?'orange'
+      :cell.owner==='orange'?'clear':null):null;
 
+    // ── Outer shadow ring ──
     const outerC=pointyCorners(x,y,R);
-    const innerC=pointyCorners(x,y,R*0.88); // slight gap = the "stroke"
-
-    // ── Draw outer hex (acts as border) ──
     ctx.beginPath();ctx.moveTo(...outerC[0]);for(let i=1;i<6;i++)ctx.lineTo(...outerC[i]);ctx.closePath();
-    if(owned==='green')       ctx.fillStyle=teamFill.green;
-    else if(owned==='orange') ctx.fillStyle=teamFill.orange;
-    else if(isSel)            ctx.fillStyle='#c4b5fd'; // light purple border for selected
-    else if(nextStep==='assign') ctx.fillStyle='#a78bfa';
-    else                      ctx.fillStyle='#4c1d95'; // dark purple border for unowned
+    if(cell.owner==='green')      ctx.fillStyle=darken(teamFill.green,.38);
+    else if(cell.owner==='orange') ctx.fillStyle=darken(teamFill.orange,.38);
+    else if(isSel)                 ctx.fillStyle='#3b0f6e';
+    else                           ctx.fillStyle='#1a0840';
     ctx.fill();
 
-    // ── Draw inner hex (the cell face) ──
+    // ── Inner fill ──
+    const innerC=pointyCorners(x,y,R-BORDER);
     ctx.beginPath();ctx.moveTo(...innerC[0]);for(let i=1;i<6;i++)ctx.lineTo(...innerC[i]);ctx.closePath();
-    if(owned==='green')       ctx.fillStyle=teamFill.green;
-    else if(owned==='orange') ctx.fillStyle=teamFill.orange;
-    else if(isSel)            ctx.fillStyle='#ede9fe'; // very light lavender when selected
-    else if(pendingTeam&&isHov) ctx.fillStyle=pendingTeam==='green'?lighten(teamFill.green,.6):lighten(teamFill.orange,.6);
-    else if(nextStep==='assign') ctx.fillStyle='#ddd6fe';
-    else if(nextStep==='orange') ctx.fillStyle=lighten(teamFill.orange,.6);
-    else if(nextStep==='clear')  ctx.fillStyle='#fee2e2';
-    else                         ctx.fillStyle='#ffffff'; // clean white
-    ctx.fill();
+    let fill;
+    if(cell.owner==='green')       fill=teamFill.green;
+    else if(cell.owner==='orange') fill=teamFill.orange;
+    else if(isSel)                 fill='#6d28d9';   // deep purple when selected
+    else if(pendingTeam&&isHov)    fill=lighten(pendingTeam==='green'?teamFill.green:teamFill.orange,.3);
+    else if(nextStep==='select')   fill='#5b21b6';
+    else if(nextStep==='green')    fill=lighten(teamFill.green,.25);
+    else if(nextStep==='orange')   fill=lighten(teamFill.orange,.25);
+    else if(nextStep==='clear')    fill='#4c1d95';
+    else                           fill='#3b1278';   // default unowned: rich purple
+    ctx.fillStyle=fill; ctx.fill();
 
-    // ── Shield ring ──
+    // ── Subtle inner bevel (top highlight) ──
+    if(!cell.owner&&!isSel){
+      const bevelC=pointyCorners(x,y,R-BORDER*1.5);
+      ctx.beginPath();ctx.moveTo(...bevelC[0]);for(let i=1;i<3;i++)ctx.lineTo(...bevelC[i]);
+      ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=1.2;ctx.stroke();
+    }
+
+    // ── Shield glow ──
     if(shieldedCells.has(cell.id)){
       ctx.beginPath();ctx.moveTo(...outerC[0]);for(let i=1;i<6;i++)ctx.lineTo(...outerC[i]);ctx.closePath();
-      ctx.strokeStyle='#38bdf8';ctx.lineWidth=R*.04;ctx.globalAlpha=.8;ctx.stroke();ctx.globalAlpha=1;
+      ctx.strokeStyle='#38bdf8';ctx.lineWidth=R*.06;ctx.globalAlpha=.8;ctx.stroke();ctx.globalAlpha=1;
     }
 
-    // ── Hover outline only ──
-    if(isHov&&!owned){
+    // ── Hover ring ──
+    if(nextStep&&!pendingTeam){
+      const dc=nextStep==='select'?'rgba(168,85,247,.9)':nextStep==='green'?teamFill.green:nextStep==='orange'?teamFill.orange:'rgba(239,68,68,.8)';
       ctx.beginPath();ctx.moveTo(...outerC[0]);for(let i=1;i<6;i++)ctx.lineTo(...outerC[i]);ctx.closePath();
-      const hc=nextStep==='select'||nextStep==='assign'?'#7c3aed':nextStep==='orange'?teamFill.orange:'#ef4444';
-      ctx.strokeStyle=hc;ctx.lineWidth=R*.03;ctx.globalAlpha=.5;ctx.stroke();ctx.globalAlpha=1;
+      ctx.strokeStyle=dc;ctx.lineWidth=R*.055;ctx.globalAlpha=.65;ctx.stroke();ctx.globalAlpha=1;
     }
 
-    // ── Letter: only shown when UNOWNED ──
-    // Owned cells show NO letter — just the pure team color
-    if(!owned){
-      const showQuestion=revealMode&&!cell.revealed;
-      const letter=showQuestion?'؟':cell.letter;
-      const fs=Math.round(R*.50);
-      ctx.font=`800 ${fs}px Tajawal,sans-serif`;
-      ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
-      // dark purple letter on white/lavender cell
-      ctx.fillStyle=isSel?'#4c1d95':'#3b0764';
-      ctx.fillText(letter, x, y + fs*.04);
+    // ── Selected glow ring ──
+    if(isSel){
+      ctx.beginPath();ctx.moveTo(...outerC[0]);for(let i=1;i<6;i++)ctx.lineTo(...outerC[i]);ctx.closePath();
+      ctx.strokeStyle='#c084fc';ctx.lineWidth=R*.06;ctx.globalAlpha=.9;ctx.stroke();ctx.globalAlpha=1;
+      // outer soft glow
+      ctx.beginPath();ctx.moveTo(...pointyCorners(x,y,R+R*.04)[0]);
+      pointyCorners(x,y,R+R*.04).forEach((pt,i)=>{if(i>0)ctx.lineTo(...pt);});
+      ctx.closePath();
+      ctx.strokeStyle='rgba(192,132,252,.25)';ctx.lineWidth=R*.1;ctx.stroke();
+    }
+
+    // ── Letter — hidden when selected, shown otherwise ──
+    const showQuestion=revealMode&&!cell.revealed&&!cell.owner;
+    const letter=showQuestion?'؟':cell.letter;
+    const fs=Math.round(R*.52);
+    ctx.font=`800 ${fs}px Tajawal,sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.shadowBlur=0; ctx.shadowColor='transparent'; ctx.shadowOffsetY=0;
+
+    if(isSel){
+      // SELECTED: hide the letter — just show the filled hex
+      // (no text drawn)
+    } else if(cell.owner){
+      // Owned: bright white letter with soft shadow
+      ctx.fillStyle='rgba(255,255,255,.95)';
+      ctx.shadowColor='rgba(0,0,0,.5)'; ctx.shadowBlur=4; ctx.shadowOffsetY=1;
+      ctx.fillText(letter,x,y+fs*.04);
+      ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+    } else if(showQuestion){
+      ctx.fillStyle='rgba(255,255,255,.3)';
+      ctx.fillText(letter,x,y+fs*.04);
+    } else {
+      // Unowned: soft white letter on dark purple hex
+      ctx.fillStyle='rgba(220,200,255,.85)';
+      ctx.shadowColor='rgba(0,0,0,.4)'; ctx.shadowBlur=2;
+      ctx.fillText(letter,x,y+fs*.04);
+      ctx.shadowBlur=0;
     }
   });
 }
@@ -335,18 +367,13 @@ function darken(hex,amt){
 // ══════════════════════════════════════════════════════
 function resize(){
   const el=document.getElementById('play');
-  const W=el.clientWidth, H=el.clientHeight;
-  cv.width=W; cv.height=H;
-  // Use 94% of available space so grid is large and centered
-  const pad=0.06;
-  R=Math.min(
-    W*(1-pad*2)/((COLS-.5)*Math.sqrt(3)),
-    H*(1-pad*2)/(1.5*(ROWS-1)+2)
-  );
-  const DX=Math.sqrt(3)*R, DY=1.5*R;
-  // Center grid exactly
-  GX=(W-(COLS-.5)*DX)/2 + DX/2;
-  GY=(H-((ROWS-1)*DY+2*R))/2 + R;
+  const W=el.clientWidth,H=el.clientHeight;
+  cv.width=W;cv.height=H;
+  const pad=.09;
+  R=Math.min(W*(1-pad*2)/((COLS-.5)*Math.sqrt(3)),H*(1-pad*2)/(1.5*(ROWS-1)+2));
+  const DX=Math.sqrt(3)*R,DY=1.5*R;
+  GX=(W-(COLS-.5)*DX)/2+DX/2;
+  GY=(H-((ROWS-1)*DY+2*R))/2+R;
   draw();
 }
 
@@ -635,6 +662,8 @@ function updateScore(){
   if(wEl) wEl.textContent=winsToWin;
   // sync mobile bar
   if(typeof syncMobileBar==='function') syncMobileBar();
+  const sg=document.getElementById('series-g');
+  const so=document.getElementById('series-o');
   if(sg) sg.textContent=seriesWins.green;
   if(so) so.textContent=seriesWins.orange;
 }
@@ -795,14 +824,14 @@ function showRoundTransition(roundName,onDone){
   } catch(e){} }));
 
   // ── animated hex particles ──
-  const hexParts=Array.from({length:28},(_,i)=>({
+  const hexParts=Array.from({length:22},(_,i)=>({
     x:Math.random()*W, y:Math.random()*H,
-    r:20+Math.random()*50,
-    rot:Math.random()*Math.PI*2, rotV:(Math.random()-.5)*.04,
-    vx:(Math.random()-.5)*3, vy:-2-Math.random()*4,
+    r:18+Math.random()*44,
+    rot:Math.random()*Math.PI*2, rotV:(Math.random()-.5)*.03,
+    vx:(Math.random()-.5)*2, vy:-1.5-Math.random()*3,
     alpha:0, life:0,
-    delay:Math.random()*.6,
-    color:[teamFill.green,teamFill.orange,'#f9e000','rgba(255,255,255,0.6)'][i%4]
+    delay:Math.random()*.5,
+    color:['rgba(168,85,247,0.9)','rgba(139,92,246,0.9)','rgba(196,148,255,0.7)','rgba(255,255,255,0.35)','rgba(109,40,217,0.8)'][i%5]
   }));
 
   let startT=null,phase='in'; // phases: in / hold / out
@@ -862,23 +891,24 @@ function showRoundTransition(roundName,onDone){
     if(t>PHASE_IN*.3){
       const lp=Math.min(1,(t-PHASE_IN*.3)/(PHASE_IN*.5));
       const ease=lp<.5?2*lp*lp:(4-2*lp)*lp-1;
-      const lx=W*.5+80*(1-ease);
-      const ly=H*.38;
+      const lx=W*.5;
+      const ly=H*.36;
       const la=ease*(t<PHASE_IN+PHASE_HOLD?1:Math.max(0,1-(t-PHASE_IN-PHASE_HOLD)/PHASE_OUT));
+      const slideY=30*(1-ease);
       c.save();c.globalAlpha=la;
-      const fs1=Math.min(W*.1,80);
+      c.translate(lx,ly+slideY);
+      const fs1=Math.min(W*.09,72);
       c.font=`800 ${fs1}px Tajawal,sans-serif`;
       c.textAlign='center';c.textBaseline='middle';
-      // shadow layers
-      c.fillStyle='#7a5c00';
-      for(let s=6;s>=1;s--) c.fillText('الجولة',lx+s*1.5,ly+s*2);
-      // gradient fill
-      const gL=c.createLinearGradient(lx-200,ly-40,lx+200,ly+40);
-      gL.addColorStop(0,'#ffe566');gL.addColorStop(.5,'#ffffff');gL.addColorStop(1,'#ffd600');
-      c.fillStyle=gL;c.fillText('الجولة',lx,ly);
-      // outline
-      c.strokeStyle='rgba(255,255,255,.3)';c.lineWidth=3;c.lineJoin='round';
-      c.strokeText('الجولة',lx,ly);
+      // soft shadow
+      c.shadowColor='rgba(0,0,0,.6)';c.shadowBlur=18;c.shadowOffsetY=4;
+      c.fillStyle='rgba(255,255,255,.9)';
+      c.fillText('الجولة',0,0);
+      c.shadowBlur=0;c.shadowOffsetY=0;
+      // subtle purple underline
+      const tw=c.measureText('الجولة').width;
+      c.strokeStyle='rgba(192,132,252,.5)';c.lineWidth=2;
+      c.beginPath();c.moveTo(-tw*.4,fs1*.55);c.lineTo(tw*.4,fs1*.55);c.stroke();
       c.restore();
     }
 
@@ -886,39 +916,39 @@ function showRoundTransition(roundName,onDone){
     if(t>PHASE_IN*.55){
       const np=Math.min(1,(t-PHASE_IN*.55)/(PHASE_IN*.5));
       const ease=np<.5?4*np*np*np:(np-1)*(2*np-2)*(2*np-2)+1;
-      const sc=.4+ease*.6+Math.sin(Math.max(0,t-PHASE_IN*.8)*6)*(.08*(1-ease));
+      const sc=.5+ease*.5+Math.sin(Math.max(0,t-PHASE_IN*.8)*5)*(.04*(1-ease));
       const na=ease*(t<PHASE_IN+PHASE_HOLD?1:Math.max(0,1-(t-PHASE_IN-PHASE_HOLD)/PHASE_OUT));
       c.save();
       c.globalAlpha=na;
       c.translate(W*.5,H*.62);c.scale(sc,sc);
-      const fs2=Math.min(W*.18,130);
-      c.font=`800 ${fs2}px Tajawal,sans-serif`;
+      const fs2=Math.min(W*.16,120);
+      c.font=`900 ${fs2}px Tajawal,sans-serif`;
       c.textAlign='center';c.textBaseline='middle';
-      // 3D shadow stack
-      c.fillStyle='#7c0000';
-      for(let s=10;s>=1;s--) c.fillText(roundName,s*1.8,s*2.2);
-      // cyan gradient
-      const gN=c.createLinearGradient(0,-fs2*.6,0,fs2*.6);
-      gN.addColorStop(0,'#7efeff');gN.addColorStop(.45,'#00dfff');gN.addColorStop(1,'#0077b6');
+      // glow halo
+      c.shadowColor='#c084fc';c.shadowBlur=55;
+      c.fillStyle='rgba(192,132,252,.18)';c.fillText(roundName,0,0);
+      c.shadowBlur=0;
+      // hard shadow
+      c.fillStyle='rgba(30,5,80,.7)';
+      for(let s=5;s>=1;s--) c.fillText(roundName,s*1.2,s*1.5);
+      // main gradient fill
+      const gN=c.createLinearGradient(0,-fs2*.55,0,fs2*.55);
+      gN.addColorStop(0,'#e9d5ff');gN.addColorStop(.4,'#c084fc');gN.addColorStop(1,'#7c3aed');
       c.fillStyle=gN;c.fillText(roundName,0,0);
-      // white outline
-      c.strokeStyle='rgba(255,255,255,.45)';c.lineWidth=4;c.lineJoin='round';
+      // crisp white outline
+      c.strokeStyle='rgba(255,255,255,.22)';c.lineWidth=3;c.lineJoin='round';
       c.strokeText(roundName,0,0);
-      // glow
-      c.shadowColor='#00dfff';c.shadowBlur=40;c.fillStyle='rgba(0,220,255,.15)';
-      c.fillText(roundName,0,0);c.shadowBlur=0;
       c.restore();
     }
 
     // ── 3 bouncing dots ──
     if(t>PHASE_IN+.2 && t<PHASE_IN+PHASE_HOLD-.1){
-      [teamFill.green,'#f9e000',teamFill.orange].forEach((col,i)=>{
-        const bx=W*.5+(i-1)*28, by=H*.82;
-        const bp=Math.sin((t-PHASE_IN-.2)*6+i*1.2)*.5+.5;
-        c.globalAlpha=.85;
-        c.beginPath();c.arc(bx,by-bp*12,7,0,Math.PI*2);
+      ['#c084fc','#a855f7','#7c3aed'].forEach((col,i)=>{
+        const bx=W*.5+(i-1)*24, by=H*.82;
+        const bp=Math.sin((t-PHASE_IN-.2)*5+i*1.1)*.5+.5;
+        c.globalAlpha=.7+bp*.25;
+        c.beginPath();c.arc(bx,by-bp*10,5+bp*2,0,Math.PI*2);
         c.fillStyle=col;c.fill();
-        c.strokeStyle='rgba(255,255,255,.4)';c.lineWidth=1.5;c.stroke();
       });
       c.globalAlpha=1;
     }
@@ -1072,7 +1102,7 @@ function onGameNameInput(val){
 function onColorChange(team,hex){
   teamFill[team]=hex;
   teamBorder[team]=darken(hex,.35);
-  teamZone[team]=hex; // zone same as fill
+  teamZone[team]=darken(hex,.75);
   applyTeamColors();
   if(cv&&cv.width) draw();
 }
@@ -1139,24 +1169,265 @@ document.addEventListener('DOMContentLoaded',()=>{
   setTimeout(()=>initMenuCanvas(),50);
 });
 
-
-// ══════════════════════════════════════════════════════
-//  POWERS — disabled (stubs only so nothing crashes)
-// ══════════════════════════════════════════════════════
-var powersMode    = false;
+var powersMode = false;
+var heldPowers = { green: null, orange: null };
 var shieldedCells = new Set();
+var blockedTeam = null; // team whose NEXT correct answer is blocked by presenter
 var powerPickMode = null;
 
-function triggerPowerSpin(){}
-function resetPowers(){ shieldedCells.clear(); powerPickMode=null; }
-function handlePowerPick(){ return false; }
-function updatePowerBadges(){}
-function updateBlockUI(){
-  var bar=document.getElementById('block-bar');
-  if(bar) bar.style.display='none';
+// Powers redesigned for PRESENTER-based game (no time pressure)
+const POWERS = [
+  { id:'shield',  emoji:'🛡️', name:'درع',     color:'#38bdf8',
+    desc:'اختر أي خلية من خلاياك — تصير محمية ولا يقدر أحد يسرقها' },
+  { id:'bomb',    emoji:'💣', name:'قنبلة',   color:'#ef4444',
+    desc:'المقدم يختار خليتين من الخصم ويمسحهم فوراً' },
+  { id:'steal',   emoji:'⚡', name:'سرقة',    color:'#f9e000',
+    desc:'اختر أي خلية من الخصم — تصبح ملكك مباشرةً' },
+  { id:'block',   emoji:'🚫', name:'حجب',     color:'#f97316',
+    desc:'الإجابة الصحيحة القادمة للخصم لا تُحسب — المقدم يفعّلها وقت المناسب' },
+  { id:'double',  emoji:'⭐', name:'مضاعف',   color:'#fbbf24',
+    desc:'اختر خليتين بدل خلية واحدة في دورك القادم' },
+  { id:'shuffle', emoji:'🌀', name:'خلط',     color:'#e879f9',
+    desc:'كل الحروف غير المحجوزة على الشبكة تتخلط من جديد' },
+];
+
+// called right after a fresh cell claim (not reassign)
+function triggerPowerSpin(team) {
+  if (!powersMode) return;
+  const power = POWERS[Math.floor(Math.random() * POWERS.length)];
+  showPowerSpin(team, power);
 }
-function useBlock(){}
-function showPowerToast(msg){
-  // simple non-blocking toast — safe fallback
-  console.log('[power toast]', msg);
+
+// ── Spin animation overlay ──
+function showPowerSpin(team, power) {
+  const old = document.getElementById('power-spin');
+  if (old) old.remove();
+
+  const tc = teamFill[team];
+  const el = document.createElement('div');
+  el.id = 'power-spin';
+
+  el.innerHTML = `
+    <div class="ps-backdrop"></div>
+    <div class="ps-card" style="--tc:${tc}">
+      <div class="ps-header" style="color:${tc}">⚡ قوة عشوائية ⚡</div>
+      <div class="ps-team" style="color:${tc}">${names[team]}</div>
+      <div class="ps-wheel" id="ps-wheel">
+        ${POWERS.map((p,i) => `<div class="ps-slot" style="--i:${i}">${p.emoji} ${p.name}</div>`).join('')}
+      </div>
+      <div class="ps-landing" id="ps-landing" style="display:none">
+        <div class="ps-big-emoji">${power.emoji}</div>
+        <div class="ps-power-name" style="color:${power.color}">${power.name}</div>
+        <div class="ps-power-desc">${power.desc}</div>
+      </div>
+      <div class="ps-btns" id="ps-btns" style="display:none">
+        <button class="ps-btn ps-use" onclick="activatePower('${team}','${power.id}')">استخدم الآن ▶</button>
+        <button class="ps-btn ps-save" onclick="savePower('${team}',${JSON.stringify(power).replace(/"/g,'&quot;')})">احتفظ بها 💾</button>
+        <button class="ps-btn ps-skip" onclick="closePowerSpin()">تخطَّ ✕</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('ps-visible'));
+
+  // spin sound
+  snd(() => unlockAudio().then(a => { if (!a) return; try {
+    for (let i = 0; i < 8; i++) {
+      const o = a.createOscillator(), g = a.createGain();
+      o.connect(g); g.connect(a.destination); o.type = 'sine';
+      o.frequency.value = 300 + i * 120;
+      const t = a.currentTime + i * 0.08;
+      g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+      o.start(t); o.stop(t + 0.1);
+    }
+  } catch(e){} }));
+
+  // spin the wheel, then reveal
+  const wheel = el.querySelector('#ps-wheel');
+  const slotH = 48;
+  let speed = 22, pos = 0, ticks = 0, targetTicks = 28 + Math.floor(Math.random() * 16);
+  const targetIdx = POWERS.indexOf(power);
+
+  function spinStep() {
+    if (ticks < targetTicks) {
+      speed = ticks > targetTicks * 0.65 ? Math.max(3, speed * 0.88) : speed;
+      pos -= speed;
+      wheel.style.transform = `translateY(${pos % (POWERS.length * slotH)}px)`;
+      ticks++;
+      setTimeout(spinStep, 16 + (ticks > targetTicks * 0.7 ? ticks * 1.2 : 0));
+    } else {
+      // snap to target
+      wheel.style.transform = `translateY(${-targetIdx * slotH}px)`;
+      wheel.style.transition = 'transform 0.3s cubic-bezier(.175,.885,.32,1.5)';
+      setTimeout(() => revealPower(el, power, tc), 400);
+    }
+  }
+  setTimeout(spinStep, 300);
+}
+
+function revealPower(el, power, tc) {
+  el.querySelector('#ps-wheel').style.display = 'none';
+  el.querySelector('#ps-landing').style.display = 'flex';
+  el.querySelector('#ps-btns').style.display = 'flex';
+
+  // reveal sound
+  snd(() => unlockAudio().then(a => { if (!a) return; try {
+    [523, 659, 784, 1047].forEach((f, i) => {
+      const o = a.createOscillator(), g = a.createGain();
+      o.connect(g); g.connect(a.destination); o.type = 'triangle'; o.frequency.value = f;
+      const t = a.currentTime + i * 0.1;
+      g.gain.setValueAtTime(0.2, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      o.start(t); o.stop(t + 0.35);
+    });
+  } catch(e){} }));
+}
+
+function closePowerSpin() {
+  const el = document.getElementById('power-spin');
+  if (!el) return;
+  el.classList.remove('ps-visible');
+  setTimeout(() => el.remove(), 300);
+}
+
+function savePower(team, power) {
+  heldPowers[team] = power;
+  updatePowerBadges();
+  closePowerSpin();
+  showPowerToast(`💾 ${names[team]} احتفظ بـ ${power.emoji} ${power.name}`);
+}
+
+function activatePower(team, powerId, fromSave) {
+  if (!fromSave) closePowerSpin();
+  const power = POWERS.find(p => p.id === powerId);
+  if (!power) return;
+
+  const opp = team === 'green' ? 'orange' : 'green';
+
+  switch (powerId) {
+    case 'shield':
+      showPowerToast(`🛡️ اختر خلية لتحميها — انقر عليها`);
+      setPowerPickMode(team, 'shield');
+      break;
+    case 'bomb':
+      showPowerToast(`💣 انقر على خليتين للخصم لتفجيرهما`);
+      setPowerPickMode(opp, 'bomb', 2);
+      break;
+    case 'steal':
+      showPowerToast(`⚡ انقر على خلية الخصم لسرقتها`);
+      setPowerPickMode(opp, 'steal_from', 1, team);
+      break;
+    case 'freeze':
+      frozenTeam = opp;
+      if (frozenTimer) clearTimeout(frozenTimer);
+      frozenTimer = setTimeout(() => { frozenTeam = null; updateFreezeUI(); }, 5000);
+      updateFreezeUI();
+      showPowerToast(`❄️ ${names[opp]} مجمَّد لمدة 5 ثوانٍ!`);
+      break;
+    case 'double':
+      heldPowers[team] = { ...power, active: true };
+      updatePowerBadges();
+      showPowerToast(`⭐ خليتك القادمة تساوي نقطتين!`);
+      break;
+    case 'shuffle':
+      doShuffle(opp);
+      showPowerToast(`🌀 تم خلط 3 خلايا من ${names[opp]}!`);
+      break;
+  }
+  if (fromSave) { heldPowers[team] = null; updatePowerBadges(); }
+}
+
+// ── Power pick mode: next cell click is intercepted ──
+// powerPickMode already declared above // {team, type, count, beneficiary}
+function setPowerPickMode(targetTeam, type, count = 1, beneficiary = null) {
+  powerPickMode = { targetTeam, type, count, remaining: count, beneficiary };
+  showPowerToast(count > 1 ? `انقر على ${count} خلايا` : `انقر على خلية`, 8000);
+}
+
+function handlePowerPick(cellId) {
+  if (!powerPickMode) return false;
+  const { targetTeam, type, beneficiary } = powerPickMode;
+  const cell = cells.find(c => c.id === cellId);
+  if (!cell) return false;
+
+  if (type === 'shield') {
+    if (cell.owner !== targetTeam && cell.owner !== (targetTeam === 'green' ? 'orange' : 'green')) return false;
+    // actually shield is for OWN cell
+    shieldedCells.add(cellId);
+    draw();
+    showPowerToast(`🛡️ الخلية "${cell.letter}" محمية الآن!`);
+    powerPickMode = null; return true;
+  }
+  if (type === 'bomb') {
+    if (cell.owner !== targetTeam) return false;
+    shieldedCells.delete(cellId);
+    cell.owner = null; if (revealMode) cell.revealed = false;
+    draw();
+    powerPickMode.remaining--;
+    if (powerPickMode.remaining <= 0) { powerPickMode = null; showPowerToast(`💣 تم التفجير!`); }
+    else showPowerToast(`💣 انقر على خلية أخرى`);
+    return true;
+  }
+  if (type === 'steal_from') {
+    if (cell.owner !== targetTeam) return false;
+    if (shieldedCells.has(cellId)) { showPowerToast(`🛡️ هذه الخلية محمية!`); return true; }
+    cell.owner = beneficiary; draw();
+    showPowerToast(`⚡ تمت السرقة!`);
+    powerPickMode = null; return true;
+  }
+  return false;
+}
+
+function doShuffle(team) {
+  const owned = cells.filter(c => c.owner === team);
+  if (owned.length < 3) { showPowerToast('ليس لديه خلايا كافية'); return; }
+  const picks = owned.sort(() => Math.random() - 0.5).slice(0, 3);
+  const letters = picks.map(c => c.letter);
+  letters.sort(() => Math.random() - 0.5);
+  picks.forEach((c, i) => c.letter = letters[i]);
+  draw();
+}
+
+function updateFreezeUI() {
+  const gBtn = document.getElementById('btn-g');
+  const oBtn = document.getElementById('btn-o');
+  if (gBtn) gBtn.classList.toggle('frozen-btn', frozenTeam === 'green');
+  if (oBtn) oBtn.classList.toggle('frozen-btn', frozenTeam === 'orange');
+}
+
+// ── Power badges in sidebar ──
+function updatePowerBadges() {
+  ['green','orange'].forEach(t => {
+    const badge = document.getElementById(`power-badge-${t === 'green' ? 'g' : 'o'}`);
+    if (!badge) return;
+    const p = heldPowers[t];
+    badge.textContent = p ? p.emoji : '';
+    badge.title = p ? `${p.name}: ${p.desc}` : '';
+    badge.style.display = p ? 'flex' : 'none';
+    badge.onclick = () => { if (p) activatePower(t, p.id, true); };
+  });
+}
+
+// ── Toast notification ──
+function showPowerToast(msg, duration = 3000) {
+  const old = document.getElementById('power-toast');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.id = 'power-toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('pt-show'));
+  setTimeout(() => { el.classList.remove('pt-show'); setTimeout(() => el.remove(), 400); }, duration);
+}
+
+// ── Shield draw helper (called from draw) ──
+function isShielded(cellId) { return shieldedCells.has(cellId); }
+
+// ── Reset powers on new round/game ──
+function resetPowers() {
+  heldPowers = { green: null, orange: null };
+  frozenTeam = null;
+  if (frozenTimer) clearTimeout(frozenTimer);
+  shieldedCells.clear();
+  powerPickMode = null;
+  updatePowerBadges();
+  updateFreezeUI();
 }
