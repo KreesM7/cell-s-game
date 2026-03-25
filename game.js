@@ -5,7 +5,6 @@
 const ALL_LETTERS = [...'ابتثجحخدذرزسشصضطظعغفقكلمنهوي'];
 // 28 unique Arabic letters — enough for up to 5×5 (25 cells) without repeats.
 // For 6×6 (36) or 7×7 (49) we extend with digraphs so EVERY cell stays unique.
-const DIGRAPHS = ['شد','طن','قر','فز','خل','حم','غب','سك','صو','ضي','ظث','ذع','تج','نه','رب','وأ','يإ','ءآ','لا','مد'];
 const FULL_POOL = [...ALL_LETTERS, ...DIGRAPHS]; // 48 items — covers up to 7×7 (49)
 
 var ROWS = 5, COLS = 5;
